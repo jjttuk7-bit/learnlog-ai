@@ -33,7 +33,7 @@ export async function GET() {
     // For each team, get member count
     const teams = await Promise.all(
       (memberships ?? []).map(async (m) => {
-        const team = m.teams as { id: string; name: string; description?: string; created_at: string } | null;
+        const team = m.teams as unknown as { id: string; name: string; description?: string; created_at: string } | null;
         if (!team) return null;
 
         const { count } = await supabase
