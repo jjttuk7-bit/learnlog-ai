@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users } from "lucide-react";
+import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users } from "lucide-react";
 
 const navItems = [
+  { href: "/", label: "홈", icon: Home },
   { href: "/capture", label: "캡처", icon: PenLine },
   { href: "/coach", label: "AI 코치", icon: Brain },
   { href: "/progress", label: "진도", icon: BarChart3 },
@@ -27,7 +28,7 @@ export function Sidebar() {
       </div>
       <nav className="flex-1 px-3 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}

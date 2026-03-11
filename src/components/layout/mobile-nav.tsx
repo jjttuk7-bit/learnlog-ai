@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users } from "lucide-react";
+import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users } from "lucide-react";
 
 const navItems = [
+  { href: "/", label: "홈", icon: Home },
   { href: "/capture", label: "캡처", icon: PenLine },
   { href: "/coach", label: "코치", icon: Brain },
   { href: "/progress", label: "진도", icon: BarChart3 },
@@ -23,7 +24,7 @@ export function MobileNav() {
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 z-50">
       <div className="flex justify-around items-center h-16 px-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive = item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
