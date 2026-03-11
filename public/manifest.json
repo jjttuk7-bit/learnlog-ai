@@ -1,0 +1,9 @@
+{
+  "name": "LearnLog AI",
+  "short_name": "LearnLog",
+  "description": "AI 메타인지 학습 코칭 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6"
+}
