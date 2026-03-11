@@ -65,4 +65,7 @@ export const AI_MODELS = {
 
   // Community curation — recommend relevant peer posts based on weak points
   communityCurate: "gpt-4o-mini",
+
+  // Growth analysis — pure data aggregation, no AI call needed
+  growthAnalysis: "gpt-4o-mini",
 } as const;

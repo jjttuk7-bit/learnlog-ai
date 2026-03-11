@@ -5,6 +5,7 @@ import { StreakCounter } from "@/components/confidence/streak-counter";
 import { CompletionGauge } from "@/components/confidence/completion-gauge";
 import { WinCards } from "@/components/confidence/win-card";
 import { CrisisAlert } from "@/components/confidence/crisis-alert";
+import { GrowthTimeline } from "@/components/confidence/growth-timeline";
 import { MiniGraph } from "@/components/dashboard/mini-graph";
 import { WeeklyReport } from "@/components/dashboard/weekly-report";
 import { MetricsPanel } from "@/components/dashboard/metrics-panel";
@@ -41,6 +42,9 @@ export default function Dashboard() {
 
       {/* WIN Cards */}
       <WinCards module={today?.module} topic={today?.topic} />
+
+      {/* Growth Evidence Timeline */}
+      <GrowthTimeline />
 
       {/* Mini Knowledge Graph + Portfolio */}
       <div className="grid gap-4 sm:grid-cols-2">
