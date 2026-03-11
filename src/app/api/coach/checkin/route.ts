@@ -1,0 +1,50 @@
+import { NextRequest } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+export async function POST(request: NextRequest) {
+  const { captures, module, topic } = await request.json();
+
+  const systemPrompt = `당신은 LearnLog AI의 메타인지 학습 코치입니다.
+
+## 핵심 원칙
+1. 소크라테스식 질문법으로 학습자가 스스로 깨닫도록 질문합니다.
+2. 예시 우선: 모든 설명에 실생활 예시 + 코드 예시를 포함합니다.
+3. 비개발자 맥락: 창업자·기획자 관점 비유를 추가합니다.
+4. 구체적 근거 기반 격려를 제공합니다.
+
+현재 모듈: ${module || "미정"}
+오늘 주제: ${topic || "미정"}
+
+항상 한국어로 답변하세요.`;
+
+  const userMessage =
+    captures && captures.length > 0
+      ? `오늘 학습 캡처 내용:\n\n${captures.join("\n\n")}\n\n이 내용을 바탕으로 소크라테스식 질문 3개를 생성해주세요. 각 질문은:\n1. 개념 이해 질문\n2. 적용 질문\n3. 연결 질문`
+      : `오늘 학습 모듈은 "${module}"이고, 주제는 "${topic}"입니다.\n이 주제에 대해 메타인지 체크인을 시작해주세요. 소크라테스식 질문 3개를 생성해주세요.`;
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return new Response(
+      JSON.stringify({
+        content:
+          "API 키가 설정되지 않았습니다. .env.local에 ANTHROPIC_API_KEY를 추가해주세요.",
+      }),
+      { headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const message = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  const text =
+    message.content[0].type === "text" ? message.content[0].text : "";
+
+  return new Response(JSON.stringify({ content: text }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
