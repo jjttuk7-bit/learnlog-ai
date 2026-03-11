@@ -53,3 +53,74 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===== Print / PDF styles ===== */
+@media print {
+  /* Hide app shell */
+  nav,
+  aside,
+  header,
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  .print-area {
+    display: block !important;
+  }
+
+  /* Reset dark backgrounds to white */
+  .bg-slate-950,
+  .bg-slate-900,
+  .bg-slate-800\/50,
+  [class*="bg-slate"] {
+    background: #ffffff !important;
+  }
+
+  /* Make all text dark for print */
+  .text-white,
+  .text-slate-300,
+  .text-slate-400 {
+    color: #0f172a !important;
+  }
+
+  .text-slate-500,
+  .text-slate-600 {
+    color: #475569 !important;
+  }
+
+  /* Borders */
+  [class*="border-slate"] {
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Badges / pills */
+  .bg-slate-700,
+  .bg-slate-800 {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+
+  /* Ensure cards have visible borders */
+  .rounded-xl,
+  .rounded-lg {
+    border: 1px solid #e2e8f0 !important;
+    break-inside: avoid;
+  }
+
+  /* Typography scale */
+  h1 { font-size: 26pt; }
+  h2 { font-size: 16pt; }
+  h3 { font-size: 13pt; }
+  p, li { font-size: 11pt; line-height: 1.6; }
+
+  /* Page margins */
+  @page {
+    margin: 20mm 18mm;
+  }
+}

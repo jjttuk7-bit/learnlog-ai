@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ModuleCard } from "./module-card";
 import { GrowthChart } from "./growth-chart";
-import { Edit2, Save, Share2, Download } from "lucide-react";
+import { Edit2, Save, Share2, Download, Globe, Lock } from "lucide-react";
 
 interface ModuleSummary {
   module_name: string;
@@ -39,10 +39,12 @@ interface BuilderProps {
   portfolio: PortfolioData;
   modules: ModuleSummary[];
   portfolioId: string;
+  isPublic: boolean;
   onSave: (updated: PortfolioData) => void;
+  onTogglePublic: (isPublic: boolean) => void;
 }
 
-export function PortfolioBuilder({ portfolio, modules, portfolioId, onSave }: BuilderProps) {
+export function PortfolioBuilder({ portfolio, modules, portfolioId, isPublic, onSave, onTogglePublic }: BuilderProps) {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<PortfolioData>(portfolio);
 
@@ -59,9 +61,26 @@ export function PortfolioBuilder({ portfolio, modules, portfolioId, onSave }: Bu
     });
   }
 
+  function handleDownloadPDF() {
+    window.print();
+  }
+
+  async function handleTogglePublic() {
+    const next = !isPublic;
+    onTogglePublic(next);
+    if (next) {
+      toast.success("포트폴리오가 공개로 설정되었습니다.");
+    } else {
+      toast.success("포트폴리오가 비공개로 변경되었습니다.");
+    }
+  }
+
+  const isDemo = portfolioId.startsWith("demo-");
+
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between gap-4">
+    <div id="portfolio-print-area" className="space-y-8">
+      {/* Action bar — hidden during print */}
+      <div className="flex items-center justify-between gap-4 print-hide">
         <div className="flex-1 min-w-0">
           {editing === "title" ? (
             <Input
@@ -85,29 +104,57 @@ export function PortfolioBuilder({ portfolio, modules, portfolioId, onSave }: Bu
           <p className="text-slate-400 text-sm mt-1">{draft.tagline}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {/* Public / private toggle — only for saved portfolios */}
+          {!isDemo && (
+            <Button
+              size="sm"
+              variant="outline"
+              className={
+                isPublic
+                  ? "border-green-600 text-green-400 hover:text-green-300"
+                  : "border-slate-600 text-slate-300 hover:text-white"
+              }
+              onClick={handleTogglePublic}
+              title={isPublic ? "공개 중 — 클릭하면 비공개로 전환" : "비공개 — 클릭하면 공개로 전환"}
+            >
+              {isPublic ? <Globe className="w-4 h-4 mr-1.5" /> : <Lock className="w-4 h-4 mr-1.5" />}
+              {isPublic ? "공개" : "비공개"}
+            </Button>
+          )}
+
           <Button
             size="sm"
             variant="outline"
             className="border-slate-600 text-slate-300 hover:text-white"
             onClick={handleShareUrl}
+            disabled={isDemo}
+            title={isDemo ? "포트폴리오를 먼저 저장하세요" : "공유 링크 복사"}
           >
             <Share2 className="w-4 h-4 mr-1.5" />
             공유
           </Button>
+
           <Button
             size="sm"
             variant="outline"
             className="border-slate-600 text-slate-300 hover:text-white"
-            onClick={() => toast.info("PDF 다운로드는 준비 중입니다.")}
+            onClick={handleDownloadPDF}
           >
             <Download className="w-4 h-4 mr-1.5" />
             PDF
           </Button>
+
           <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
             <Save className="w-4 h-4 mr-1.5" />
             저장
           </Button>
         </div>
+      </div>
+
+      {/* Portfolio title shown during print */}
+      <div className="hidden print:block space-y-1">
+        <h1 className="text-3xl font-bold">{draft.title}</h1>
+        <p className="text-slate-500 text-sm">{draft.tagline}</p>
       </div>
 
       <Section
@@ -178,6 +225,11 @@ export function PortfolioBuilder({ portfolio, modules, portfolioId, onSave }: Bu
         onEdit={setEditing}
         onChange={(v) => setDraft({ ...draft, conclusion: v })}
       />
+
+      {/* Print footer */}
+      <div className="hidden print:block text-center text-xs text-slate-500 pt-8 border-t border-slate-200">
+        LearnLog AI로 생성된 포트폴리오
+      </div>
     </div>
   );
 }
@@ -199,7 +251,7 @@ function Section({ label, field, value, editing, onEdit, onChange }: SectionProp
         {editing !== field && (
           <button
             onClick={() => onEdit(field)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 transition-opacity print-hide"
           >
             <Edit2 className="w-3.5 h-3.5 text-slate-400" />
           </button>
