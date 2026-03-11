@@ -48,4 +48,10 @@ export const AI_MODELS = {
 
   // Weekly report — summarize week's learning activity
   weeklyReport: "gpt-4o-mini",
+
+  // Team retrospective — needs deep analysis of team learning data
+  teamRetro: "gpt-4o",
+
+  // Community curation — recommend relevant peer posts based on weak points
+  communityCurate: "gpt-4o-mini",
 } as const;
