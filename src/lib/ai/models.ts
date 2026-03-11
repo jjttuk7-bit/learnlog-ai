@@ -38,4 +38,7 @@ export const AI_MODELS = {
   // Mindmap analysis — needs deep understanding of concept relationships
   mindmapAnalyze: "gpt-4o",
   mindmapGenerate: "gpt-4o-mini",
+
+  // Knowledge graph — relationship analysis between concepts
+  graphBuild: "gpt-4o-mini",
 } as const;
