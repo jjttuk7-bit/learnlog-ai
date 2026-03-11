@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Network, Sparkles, X } from "lucide-react";
+import { Network, Sparkles, X, BookOpen } from "lucide-react";
 import { KnowledgeGraph, type GraphNode, type GraphEdge } from "@/components/graph/knowledge-graph";
 
 const EXAMPLE_CONCEPTS = [
@@ -95,6 +95,31 @@ export default function GraphPage() {
     setCurriculumDay(12);
   }, []);
 
+  const handleBuildCurriculum = useCallback(async () => {
+    setIsBuilding(true);
+    try {
+      const res = await fetch("/api/graph/build", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "curriculum" }),
+      });
+
+      if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+
+      if (data.nodes?.length) {
+        setGraphNodes(data.nodes);
+        setGraphEdges(data.edges);
+        setSelectedNode(null);
+        toast.success(`커리큘럼 그래프 생성 완료 (${data.nodes.length}개 개념)`);
+      }
+    } catch {
+      toast.error("커리큘럼 그래프 생성 실패");
+    } finally {
+      setIsBuilding(false);
+    }
+  }, []);
+
   const handleReset = useCallback(() => {
     setGraphNodes(SAMPLE_NODES);
     setGraphEdges(SAMPLE_EDGES);
@@ -150,6 +175,14 @@ export default function GraphPage() {
             >
               <Sparkles className="w-4 h-4" />
               {isBuilding ? "분석 중..." : "AI 그래프 생성"}
+            </button>
+            <button
+              onClick={handleBuildCurriculum}
+              disabled={isBuilding}
+              className="flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+            >
+              <BookOpen className="w-4 h-4" />
+              {isBuilding ? "생성 중..." : "커리큘럼 자동 생성"}
             </button>
             <button
               onClick={handleLoadExample}
