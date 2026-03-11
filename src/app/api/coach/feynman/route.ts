@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { FEYNMAN_SYSTEM_PROMPT } from "@/lib/prompts/deep-check";
-import { AI_MODELS } from "@/lib/ai/models";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { AI_MODELS, getOpenAI } from "@/lib/ai/models";
 
 export async function POST(request: NextRequest) {
+  const openai = getOpenAI();
   const { action, concept, explanation, module, topic, previousFeedback } =
     await request.json();
 

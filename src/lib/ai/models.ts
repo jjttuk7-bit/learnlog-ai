@@ -1,3 +1,14 @@
+import OpenAI from "openai";
+
+// Lazy-initialized OpenAI client (avoids build-time crash when env var is missing)
+let _openai: OpenAI | null = null;
+export function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return _openai;
+}
+
 // Centralized AI model configuration for cost optimization
 // gpt-4o-mini: ~$0.15/1M input, $0.60/1M output (cheap, fast)
 // gpt-4o: ~$2.50/1M input, $10/1M output (capable, expensive)

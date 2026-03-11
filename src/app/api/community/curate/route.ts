@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-import { AI_MODELS } from "@/lib/ai/models";
+import { AI_MODELS, getOpenAI } from "@/lib/ai/models";
 import { createClient } from "@/lib/supabase/server";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 export async function POST(request: NextRequest) {
+  const openai = getOpenAI();
   try {
     const supabase = await createClient();
 

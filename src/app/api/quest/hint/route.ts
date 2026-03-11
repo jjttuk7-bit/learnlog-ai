@@ -1,8 +1,5 @@
 import { NextRequest } from "next/server";
-import OpenAI from "openai";
-import { AI_MODELS } from "@/lib/ai/models";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { AI_MODELS, getOpenAI } from "@/lib/ai/models";
 
 const hintInstructions: Record<number, string> = {
   1: "개념의 방향만 제시하세요. 어떤 개념을 살펴봐야 하는지만 알려주세요. 정답을 주지 마세요.",
@@ -11,6 +8,7 @@ const hintInstructions: Record<number, string> = {
 };
 
 export async function POST(request: NextRequest) {
+  const openai = getOpenAI();
   const { questTitle, stuckPoint, hintLevel, module } = await request.json();
   const level = Math.min(Math.max(hintLevel || 1, 1), 3);
 
