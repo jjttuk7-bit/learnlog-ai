@@ -21,10 +21,17 @@ export default function LoginPage() {
     if (error) {
       // If user doesn't exist, try sign up
       if (error.message.includes("Invalid login")) {
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
         if (signUpError) {
           toast.error(signUpError.message);
           setLoading(false);
+          return;
+        }
+        // If email confirmation is off, user is auto-logged in
+        if (data.session) {
+          toast.success("가입 완료!");
+          router.push("/");
+          router.refresh();
           return;
         }
         toast.success("가입 완료! 이메일을 확인해주세요.");
