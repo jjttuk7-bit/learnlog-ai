@@ -1,9 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Flame } from "lucide-react";
 
-interface Props {
-  streakDays: number;
+interface StreakData {
+  current_streak: number;
+  longest_streak: number;
+  total_active_days: number;
 }
 
 const MILESTONES = [
@@ -14,7 +17,31 @@ const MILESTONES = [
   { days: 119, label: "완주!", emoji: "👑" },
 ];
 
-export function StreakCounter({ streakDays }: Props) {
+export function StreakCounter() {
+  const [data, setData] = useState<StreakData>({
+    current_streak: 0,
+    longest_streak: 0,
+    total_active_days: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStreak() {
+      try {
+        const res = await fetch("/api/confidence/streak");
+        if (res.ok) {
+          const json = await res.json();
+          setData(json);
+        }
+      } catch {
+        // keep defaults
+      }
+      setLoading(false);
+    }
+    fetchStreak();
+  }, []);
+
+  const streakDays = data.current_streak;
   const nextMilestone = MILESTONES.find((m) => m.days > streakDays);
 
   return (
@@ -25,11 +52,13 @@ export function StreakCounter({ streakDays }: Props) {
             <Flame className="w-6 h-6 text-orange-400" />
           </div>
           <div>
-            <div className="text-2xl font-bold">{streakDays}일</div>
+            <div className="text-2xl font-bold">
+              {loading ? "—" : `${streakDays}일`}
+            </div>
             <div className="text-xs text-slate-400">연속 기록</div>
           </div>
         </div>
-        {nextMilestone && (
+        {!loading && nextMilestone && (
           <div className="text-right">
             <div className="text-xs text-slate-500">다음 마일스톤</div>
             <div className="text-sm text-slate-300">
@@ -55,6 +84,13 @@ export function StreakCounter({ streakDays }: Props) {
           </div>
         ))}
       </div>
+
+      {!loading && data.total_active_days > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-700 flex gap-4 text-xs text-slate-400">
+          <span>최장 {data.longest_streak}일 연속</span>
+          <span>총 {data.total_active_days}일 활동</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,18 @@ export function WinCards({ module, topic }: Props) {
   useEffect(() => {
     async function fetchWins() {
       try {
+        // 1. Check Supabase cache first (GET)
+        const cacheRes = await fetch("/api/confidence/wins");
+        if (cacheRes.ok) {
+          const cacheData = await cacheRes.json();
+          if (cacheData.wins?.length) {
+            setWins(cacheData.wins);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // 2. No cached cards — generate via AI (POST) and persist
         const res = await fetch("/api/confidence/wins", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -47,9 +59,7 @@ export function WinCards({ module, topic }: Props) {
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Trophy className="w-5 h-5 text-yellow-400" /> 오늘의 WIN
         </h2>
-        <div className="text-sm text-slate-500">
-          성과를 분석하고 있어요...
-        </div>
+        <div className="text-sm text-slate-500">성과를 분석하고 있어요...</div>
       </div>
     );
   }

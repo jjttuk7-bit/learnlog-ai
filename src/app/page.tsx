@@ -3,6 +3,7 @@ import { TodaySummary } from "@/components/dashboard/today-summary";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { StreakCounter } from "@/components/confidence/streak-counter";
 import { CompletionGauge } from "@/components/confidence/completion-gauge";
+import { SelfRating } from "@/components/confidence/self-rating";
 import { WinCards } from "@/components/confidence/win-card";
 import { CrisisAlert } from "@/components/confidence/crisis-alert";
 import { GrowthTimeline } from "@/components/confidence/growth-timeline";
@@ -31,9 +32,12 @@ export default function Dashboard() {
       <TodaySummary />
       <QuickActions />
 
+      {/* Self Rating */}
+      <SelfRating />
+
       {/* Streak + Completion */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <StreakCounter streakDays={1} />
+        <StreakCounter />
         <CompletionGauge percentage={85} />
       </div>
 
