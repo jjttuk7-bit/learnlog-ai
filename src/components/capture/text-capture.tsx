@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import type { CaptureItem } from "@/app/capture/page";
 
 interface Props {
@@ -24,7 +26,6 @@ export function TextCapture({ module, topic, onCapture }: Props) {
     const captureContent = content.trim();
     setContent("");
 
-    // Classify asynchronously
     let category = "concept";
     let tags: string[] = [];
     try {
@@ -38,6 +39,22 @@ export function TextCapture({ module, topic, onCapture }: Props) {
       tags = data.tags;
     } catch {
       // Fallback to default
+    }
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { error } = await supabase.from("captures").insert({
+        user_id: user.id,
+        capture_type: "text",
+        content: captureContent,
+        ai_category: category,
+        ai_tags: tags,
+      });
+      if (error) {
+        toast.error("저장 실패: " + error.message);
+      }
     }
 
     onCapture({

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getTodayCurriculum } from "@/lib/curriculum";
+import { createClient } from "@/lib/supabase/client";
 import { TextCapture } from "@/components/capture/text-capture";
 import { VoiceCapture } from "@/components/capture/voice-capture";
 import { CodeCapture } from "@/components/capture/code-capture";
@@ -21,6 +22,24 @@ export interface CaptureItem {
 export default function CapturePage() {
   const today = getTodayCurriculum();
   const [captures, setCaptures] = useState<CaptureItem[]>([]);
+
+  useEffect(() => {
+    async function loadCaptures() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("captures")
+        .select("id, content, capture_type, ai_category, ai_tags, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (data) setCaptures(data);
+    }
+    loadCaptures();
+  }, []);
 
   function addCapture(item: CaptureItem) {
     setCaptures((prev) => [item, ...prev]);
