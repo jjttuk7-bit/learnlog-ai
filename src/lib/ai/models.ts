@@ -45,4 +45,7 @@ export const AI_MODELS = {
   // Portfolio generation — complex synthesis of 6-month learning data
   portfolioGenerate: "gpt-4o",
   portfolioSummary: "gpt-4o-mini",
+
+  // Weekly report — summarize week's learning activity
+  weeklyReport: "gpt-4o-mini",
 } as const;

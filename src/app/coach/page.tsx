@@ -3,7 +3,32 @@
 import { useState } from "react";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { CheckinSession } from "@/components/coach/checkin-session";
-import { MessageSquare, BookOpen, FileText, GitBranch } from "lucide-react";
+import { MessageSquare, BookOpen, FileText, GitBranch, Sparkles } from "lucide-react";
+
+const DAY_ROUTINES: Record<number, { label: string; mode: string; color: string }> = {
+  1: { label: "월", mode: "feynman", color: "green" },
+  2: { label: "화", mode: "feynman", color: "green" },
+  3: { label: "수", mode: "feynman", color: "green" },
+  4: { label: "목", mode: "blank-recall", color: "purple" },
+  5: { label: "금", mode: "mindmap", color: "cyan" },
+};
+
+const MODE_LABELS: Record<string, string> = {
+  feynman: "파인만 모드",
+  "blank-recall": "백지학습 모드",
+  mindmap: "마인드맵 모드",
+};
+
+const MODE_DESCRIPTIONS: Record<string, string> = {
+  feynman: "초등학생에게 설명하듯 개념 정리하기",
+  "blank-recall": "아무것도 보지 않고 오늘 배운 것 재구성하기",
+  mindmap: "개념 간 연결을 시각화하고 AI 피드백으로 보완하기",
+};
+
+function getTodayRoutine() {
+  const day = new Date().getDay();
+  return DAY_ROUTINES[day] ?? null;
+}
 
 export default function CoachPage() {
   const today = getTodayCurriculum();
@@ -11,6 +36,7 @@ export default function CoachPage() {
 
   const module = today?.module ?? "학습 준비";
   const topic = today?.topic ?? "";
+  const todayRoutine = getTodayRoutine();
 
   if (mode === "checkin") {
     return (
@@ -36,6 +62,53 @@ export default function CoachPage() {
         <p className="text-slate-400 mt-1">메타인지 기반 AI 학습 코칭</p>
       </div>
 
+      {todayRoutine && (
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm font-semibold text-yellow-400">오늘의 추천 학습법</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((d) => {
+                const r = DAY_ROUTINES[d];
+                const isToday = d === new Date().getDay();
+                const colorMap: Record<string, string> = {
+                  green: isToday ? "bg-green-500 text-white" : "bg-slate-700 text-slate-400",
+                  purple: isToday ? "bg-purple-500 text-white" : "bg-slate-700 text-slate-400",
+                  cyan: isToday ? "bg-cyan-500 text-white" : "bg-slate-700 text-slate-400",
+                };
+                return (
+                  <span
+                    key={d}
+                    className={`text-xs px-2 py-1 rounded-md font-medium transition-colors ${colorMap[r.color]}`}
+                  >
+                    {r.label}
+                  </span>
+                );
+              })}
+            </div>
+            <div>
+              <span className="text-sm font-semibold">{MODE_LABELS[todayRoutine.mode]}</span>
+              <p className="text-xs text-slate-400 mt-0.5">{MODE_DESCRIPTIONS[todayRoutine.mode]}</p>
+            </div>
+          </div>
+          <a
+            href={`/coach/${todayRoutine.mode}`}
+            className={`mt-3 inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg transition-colors ${
+              todayRoutine.color === "green"
+                ? "bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/30"
+                : todayRoutine.color === "purple"
+                ? "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/30"
+                : "bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            지금 시작하기
+          </a>
+        </div>
+      )}
+
       <div className="grid gap-4">
         <button
           onClick={() => setMode("checkin")}
@@ -59,8 +132,11 @@ export default function CoachPage() {
           <div className="p-3 bg-green-500/10 rounded-lg">
             <BookOpen className="w-6 h-6 text-green-400" />
           </div>
-          <div>
-            <h3 className="font-semibold">파인만 모드</h3>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">파인만 모드</h3>
+              <span className="text-xs text-slate-500">월·화·수 추천</span>
+            </div>
             <p className="text-sm text-slate-400 mt-0.5">
               초등학생에게 설명하듯 개념 정리하기
             </p>
@@ -74,8 +150,11 @@ export default function CoachPage() {
           <div className="p-3 bg-purple-500/10 rounded-lg">
             <FileText className="w-6 h-6 text-purple-400" />
           </div>
-          <div>
-            <h3 className="font-semibold">백지학습 모드</h3>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">백지학습 모드</h3>
+              <span className="text-xs text-slate-500">목 추천</span>
+            </div>
             <p className="text-sm text-slate-400 mt-0.5">
               아무것도 보지 않고 오늘 배운 것 재구성하기
             </p>
@@ -89,8 +168,11 @@ export default function CoachPage() {
           <div className="p-3 bg-cyan-500/10 rounded-lg">
             <GitBranch className="w-6 h-6 text-cyan-400" />
           </div>
-          <div>
-            <h3 className="font-semibold">마인드맵 모드</h3>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">마인드맵 모드</h3>
+              <span className="text-xs text-slate-500">금 추천</span>
+            </div>
             <p className="text-sm text-slate-400 mt-0.5">
               개념 간 연결을 시각화하고 AI 피드백으로 보완하기
             </p>
