@@ -7,6 +7,7 @@ import { WinCards } from "@/components/confidence/win-card";
 import { CrisisAlert } from "@/components/confidence/crisis-alert";
 import { MiniGraph } from "@/components/dashboard/mini-graph";
 import { WeeklyReport } from "@/components/dashboard/weekly-report";
+import { MetricsPanel } from "@/components/dashboard/metrics-panel";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
@@ -65,6 +66,9 @@ export default function Dashboard() {
 
       {/* Weekly Report */}
       <WeeklyReport />
+
+      {/* Success Metrics */}
+      <MetricsPanel />
     </div>
   );
 }
