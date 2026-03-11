@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(request: NextRequest) {
   const { captures, coachingMessages, module, topic } = await request.json();
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     return new Response(
       JSON.stringify({
         content:
@@ -17,10 +17,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 1024,
-    system: `당신은 LearnLog AI의 학습 회고 코치입니다.
+    messages: [
+      {
+        role: "system",
+        content: `당신은 LearnLog AI의 학습 회고 코치입니다.
 오늘의 캡처와 코칭 세션을 기반으로 회고 초안을 작성해주세요.
 
 형식:
@@ -39,7 +42,7 @@ export async function POST(request: NextRequest) {
 (구체적 다음 단계)
 
 구체적 근거 기반 격려를 포함하세요. 한국어로 작성하세요.`,
-    messages: [
+      },
       {
         role: "user",
         content: `모듈: ${module}\n주제: ${topic}\n\n캡처 내용:\n${captures?.join("\n") || "없음"}\n\n코칭 대화:\n${coachingMessages?.join("\n") || "없음"}\n\n오늘의 학습 회고를 작성해주세요.`,
@@ -47,8 +50,7 @@ export async function POST(request: NextRequest) {
     ],
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  const text = completion.choices[0].message.content ?? "";
 
   return new Response(JSON.stringify({ content: text }), {
     headers: { "Content-Type": "application/json" },

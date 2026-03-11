@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(request: NextRequest) {
   const { captures, coachingMessages, module, topic } = await request.json();
@@ -27,20 +27,23 @@ export async function POST(request: NextRequest) {
   ];
 
   if (
-    !process.env.ANTHROPIC_API_KEY ||
+    !process.env.OPENAI_API_KEY ||
     (!captures?.length && !coachingMessages?.length)
   ) {
     return Response.json({ wins: defaultWins });
   }
 
   try {
-    const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 500,
-      system: `오늘의 학습 기록에서 잘한 것 3가지를 JSON으로 추출하세요.
+      messages: [
+        {
+          role: "system",
+          content: `오늘의 학습 기록에서 잘한 것 3가지를 JSON으로 추출하세요.
 형식: {"wins": [{"title": "성과 제목", "description": "구체적 근거", "evidence": "증거"}]}
 구체적 근거 기반 격려. 빈 칭찬 금지. 한국어로.`,
-      messages: [
+        },
         {
           role: "user",
           content: `모듈: ${module}, 주제: ${topic}\n캡처: ${captures?.join("\n") || "없음"}\n코칭: ${coachingMessages?.join("\n") || "없음"}`,
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+    const text = completion.choices[0].message.content ?? "";
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
       const parsed = JSON.parse(match[0]);

@@ -1,16 +1,16 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(request: NextRequest) {
   const { question, answer, module, topic } = await request.json();
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     return new Response(
       JSON.stringify({
         content:
-          "좋은 답변이에요! (API 키 미설정 — 실제 평가를 받으려면 .env.local에 ANTHROPIC_API_KEY를 추가하세요)",
+          "좋은 답변이에요! (API 키 미설정 — 실제 평가를 받으려면 .env.local에 OPENAI_API_KEY를 추가하세요)",
         understanding_level: 3,
       }),
       { headers: { "Content-Type": "application/json" } },
@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
 
 잘한 점을 먼저 언급하세요. 점수 3 이하 시 실생활 예시 + 코드 예시 보충. 한국어로 답변하세요.`;
 
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 1024,
-    system: systemPrompt,
     messages: [
+      { role: "system", content: systemPrompt },
       {
         role: "user",
         content: `질문: ${question}\n\n학습자의 답변: ${answer}\n\n위 답변을 평가해주세요. JSON 형식으로 응답해주세요.`,
@@ -45,8 +45,7 @@ export async function POST(request: NextRequest) {
     ],
   });
 
-  const text =
-    message.content[0].type === "text" ? message.content[0].text : "";
+  const text = completion.choices[0].message.content ?? "";
 
   // Try to parse JSON, fallback to text response
   try {

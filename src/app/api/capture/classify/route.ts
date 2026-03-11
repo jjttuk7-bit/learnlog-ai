@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If no API key, return default classification
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({ category: "concept", tags: [] });
     }
 
@@ -32,17 +32,16 @@ export async function POST(request: NextRequest) {
 반드시 아래 JSON 형식으로만 응답하세요:
 {"category": "concept|code|question|insight", "tags": ["태그1", "태그2"]}`;
 
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 200,
       messages: [
+        { role: "system", content: prompt },
         { role: "user", content: `다음 학습 기록을 분류해주세요:\n\n${content}` },
       ],
-      system: prompt,
     });
 
-    const text =
-      message.content[0].type === "text" ? message.content[0].text : "";
+    const text = completion.choices[0].message.content ?? "";
     const parsed = JSON.parse(text);
 
     return NextResponse.json({

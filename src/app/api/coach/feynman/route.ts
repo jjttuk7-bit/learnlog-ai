@@ -1,14 +1,14 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { FEYNMAN_SYSTEM_PROMPT } from "@/lib/prompts/deep-check";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(request: NextRequest) {
   const { action, concept, explanation, module, topic, previousFeedback } =
     await request.json();
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     if (action === "select_concept") {
       return Response.json({ concept: topic || "오늘의 핵심 개념" });
     }
@@ -19,22 +19,26 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === "select_concept") {
-    const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
       max_tokens: 100,
-      system:
-        "오늘 학습 주제에서 파인만 학습법으로 설명 연습하기 좋은 핵심 개념 1개를 선정하세요. 개념 이름만 간단히 답변하세요. 한국어로.",
       messages: [
+        {
+          role: "system",
+          content:
+            "오늘 학습 주제에서 파인만 학습법으로 설명 연습하기 좋은 핵심 개념 1개를 선정하세요. 개념 이름만 간단히 답변하세요. 한국어로.",
+        },
         { role: "user", content: `모듈: ${module}, 주제: ${topic}` },
       ],
     });
-    const text =
-      msg.content[0].type === "text" ? msg.content[0].text : topic;
+    const text = completion.choices[0].message.content ?? topic;
     return Response.json({ concept: text.trim() });
   }
 
   // Evaluate explanation
-  const messages: Anthropic.MessageParam[] = [];
+  const messages: OpenAI.ChatCompletionMessageParam[] = [
+    { role: "system", content: FEYNMAN_SYSTEM_PROMPT },
+  ];
   if (previousFeedback) {
     messages.push({ role: "assistant", content: previousFeedback });
     messages.push({
@@ -48,13 +52,12 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const msg = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
     max_tokens: 1024,
-    system: FEYNMAN_SYSTEM_PROMPT,
     messages,
   });
 
-  const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+  const text = completion.choices[0].message.content ?? "";
   return Response.json({ content: text });
 }
