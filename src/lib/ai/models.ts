@@ -34,4 +34,8 @@ export const AI_MODELS = {
   // Quest hints — level 1-2 cheap, level 3 needs more capability
   questHintBasic: "gpt-4o-mini", // level 1-2
   questHintAdvanced: "gpt-4o", // level 3
+
+  // Mindmap analysis — needs deep understanding of concept relationships
+  mindmapAnalyze: "gpt-4o",
+  mindmapGenerate: "gpt-4o-mini",
 } as const;

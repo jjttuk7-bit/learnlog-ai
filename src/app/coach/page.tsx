@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { CheckinSession } from "@/components/coach/checkin-session";
-import { MessageSquare, BookOpen, FileText } from "lucide-react";
+import { MessageSquare, BookOpen, FileText, GitBranch } from "lucide-react";
 
 export default function CoachPage() {
   const today = getTodayCurriculum();
@@ -78,6 +78,21 @@ export default function CoachPage() {
             <h3 className="font-semibold">백지학습 모드</h3>
             <p className="text-sm text-slate-400 mt-0.5">
               아무것도 보지 않고 오늘 배운 것 재구성하기
+            </p>
+          </div>
+        </a>
+
+        <a
+          href="/coach/mindmap"
+          className="flex items-center gap-4 p-5 bg-slate-800 rounded-xl border border-slate-700 hover:border-cyan-500/50 transition-colors"
+        >
+          <div className="p-3 bg-cyan-500/10 rounded-lg">
+            <GitBranch className="w-6 h-6 text-cyan-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold">마인드맵 모드</h3>
+            <p className="text-sm text-slate-400 mt-0.5">
+              개념 간 연결을 시각화하고 AI 피드백으로 보완하기
             </p>
           </div>
         </a>
