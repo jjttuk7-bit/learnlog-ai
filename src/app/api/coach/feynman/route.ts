@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { FEYNMAN_SYSTEM_PROMPT } from "@/lib/prompts/deep-check";
+import { AI_MODELS } from "@/lib/ai/models";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   if (action === "select_concept") {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: AI_MODELS.feynmanConcept,
       max_tokens: 100,
       messages: [
         {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: AI_MODELS.feynmanEvaluate,
     max_tokens: 1024,
     messages,
   });

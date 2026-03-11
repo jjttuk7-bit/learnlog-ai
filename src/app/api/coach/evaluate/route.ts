@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
+import { AI_MODELS } from "@/lib/ai/models";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 잘한 점을 먼저 언급하세요. 점수 3 이하 시 실생활 예시 + 코드 예시 보충. 한국어로 답변하세요.`;
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: AI_MODELS.coachEvaluate,
     max_tokens: 1024,
     messages: [
       { role: "system", content: systemPrompt },

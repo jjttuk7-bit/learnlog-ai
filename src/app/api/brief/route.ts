@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
+import { AI_MODELS } from "@/lib/ai/models";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: AI_MODELS.dailyBrief,
       max_tokens: 300,
       messages: [
         { role: "system", content: "당신은 AI 학습 코치입니다. 오늘의 학습 목표 3개를 JSON 배열로 반환하세요. 형식: {\"goals\": [\"목표1\", \"목표2\", \"목표3\"]}. 각 목표는 구체적이고 달성 가능해야 합니다. 한국어로 작성하세요." },

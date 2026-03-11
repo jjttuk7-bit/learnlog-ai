@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { BLANK_RECALL_SYSTEM_PROMPT } from "@/lib/prompts/deep-check";
+import { AI_MODELS } from "@/lib/ai/models";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: AI_MODELS.blankRecall,
     max_tokens: 1024,
     messages: [
       { role: "system", content: BLANK_RECALL_SYSTEM_PROMPT },

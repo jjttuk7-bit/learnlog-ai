@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { AI_MODELS } from "@/lib/ai/models";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
 {"category": "concept|code|question|insight", "tags": ["태그1", "태그2"]}`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: AI_MODELS.captureClassify,
       max_tokens: 200,
       messages: [
         { role: "system", content: prompt },
