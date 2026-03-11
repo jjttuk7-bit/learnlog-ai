@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PenLine, Brain, BarChart3, Swords, User, Network } from "lucide-react";
+import { PenLine, Brain, BarChart3, Swords, User, Network, BookOpen } from "lucide-react";
 
 const navItems = [
   { href: "/capture", label: "캡처", icon: PenLine },
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/progress", label: "진도", icon: BarChart3 },
   { href: "/quest", label: "퀘스트", icon: Swords },
   { href: "/graph", label: "지식 그래프", icon: Network },
+  { href: "/portfolio", label: "포트폴리오", icon: BookOpen },
   { href: "/my", label: "마이", icon: User },
 ];
 

@@ -41,4 +41,8 @@ export const AI_MODELS = {
 
   // Knowledge graph — relationship analysis between concepts
   graphBuild: "gpt-4o-mini",
+
+  // Portfolio generation — complex synthesis of 6-month learning data
+  portfolioGenerate: "gpt-4o",
+  portfolioSummary: "gpt-4o-mini",
 } as const;
