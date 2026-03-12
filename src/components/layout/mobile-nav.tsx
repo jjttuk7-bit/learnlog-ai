@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users } from "lucide-react";
+import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users, NotebookPen } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "홈", icon: Home },
   { href: "/capture", label: "캡처", icon: PenLine },
+  { href: "/diary", label: "일기", icon: NotebookPen },
   { href: "/coach", label: "코치", icon: Brain },
   { href: "/progress", label: "진도", icon: BarChart3 },
   { href: "/quest", label: "퀘스트", icon: Swords },
