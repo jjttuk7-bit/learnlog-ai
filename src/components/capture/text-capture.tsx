@@ -28,6 +28,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
 
     let category = "concept";
     let tags: string[] = [];
+    let coaching: string | null = null;
     try {
       const res = await fetch("/api/capture/classify", {
         method: "POST",
@@ -37,6 +38,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
       const data = await res.json();
       category = data.category;
       tags = data.tags;
+      coaching = data.coaching ?? null;
     } catch {
       // Fallback to default
     }
@@ -51,6 +53,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
         content: captureContent,
         ai_category: category,
         ai_tags: tags,
+        ai_coaching: coaching,
       });
       if (error) {
         toast.error("저장 실패: " + error.message);
@@ -63,6 +66,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
       capture_type: "text",
       ai_category: category,
       ai_tags: tags,
+      ai_coaching: coaching,
       created_at: new Date().toISOString(),
     });
 

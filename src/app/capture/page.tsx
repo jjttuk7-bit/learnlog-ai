@@ -16,6 +16,7 @@ export interface CaptureItem {
   capture_type: "text" | "voice" | "code";
   ai_category: string | null;
   ai_tags: string[] | null;
+  ai_coaching: string | null;
   created_at: string;
 }
 
@@ -31,7 +32,7 @@ export default function CapturePage() {
 
       const { data } = await supabase
         .from("captures")
-        .select("id, content, capture_type, ai_category, ai_tags, created_at")
+        .select("id, content, capture_type, ai_category, ai_tags, ai_coaching, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);

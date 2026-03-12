@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import type { CaptureItem } from "@/app/capture/page";
 
 const categoryStyles: Record<string, { label: string; className: string }> = {
@@ -100,6 +100,17 @@ export function CaptureList({ captures, onRemove }: Props) {
                     #{tag}
                   </span>
                 ))}
+              </div>
+            )}
+            {item.ai_coaching && (
+              <div className="mt-2 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-xs font-medium text-indigo-400">AI 코칭</span>
+                </div>
+                <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  {item.ai_coaching}
+                </p>
               </div>
             )}
           </div>

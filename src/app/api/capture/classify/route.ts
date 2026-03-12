@@ -12,10 +12,10 @@ export async function POST(request: NextRequest) {
 
     // If no API key, return default classification
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ category: "concept", tags: [] });
+      return NextResponse.json({ category: "concept", tags: [], coaching: null });
     }
 
-    const prompt = `당신은 AI 엔지니어링 학습 기록 분류기입니다.
+    const classifyPrompt = `당신은 AI 엔지니어링 학습 기록 분류기입니다.
 
 현재 학습 모듈: ${module || "미정"}
 오늘의 주제: ${topic || "미정"}
@@ -31,24 +31,52 @@ export async function POST(request: NextRequest) {
 반드시 아래 JSON 형식으로만 응답하세요:
 {"category": "concept|code|question|insight", "tags": ["태그1", "태그2"]}`;
 
-    const completion = await openai.chat.completions.create({
-      model: AI_MODELS.captureClassify,
-      max_tokens: 200,
-      messages: [
-        { role: "system", content: prompt },
-        { role: "user", content: `다음 학습 기록을 분류해주세요:\n\n${content}` },
-      ],
-    });
+    const coachingPrompt = `당신은 메타인지 학습 코치입니다. 학습자가 기록한 내용을 보고 짧은 코칭 피드백을 제공합니다.
 
-    const text = completion.choices[0].message.content ?? "";
-    const parsed = JSON.parse(text);
+현재 학습 모듈: ${module || "미정"}
+오늘의 주제: ${topic || "미정"}
+
+## 코칭 원칙
+1. 학습자의 이해도를 칭찬하되 구체적 근거를 들어주세요
+2. 더 깊이 생각해볼 포인트 1가지를 제시하세요
+3. 관련된 실무 적용 팁이나 연결 개념을 1가지 알려주세요
+
+## 형식
+- 3~4문장으로 간결하게 작성
+- 한국어로 답변
+- 이모지 사용 가능`;
+
+    // 분류와 코칭을 병렬로 요청
+    const [classifyResult, coachingResult] = await Promise.all([
+      openai.chat.completions.create({
+        model: AI_MODELS.captureClassify,
+        max_tokens: 200,
+        messages: [
+          { role: "system", content: classifyPrompt },
+          { role: "user", content: `다음 학습 기록을 분류해주세요:\n\n${content}` },
+        ],
+      }),
+      openai.chat.completions.create({
+        model: AI_MODELS.captureClassify,
+        max_tokens: 300,
+        messages: [
+          { role: "system", content: coachingPrompt },
+          { role: "user", content: `학습자의 기록:\n\n${content}` },
+        ],
+      }),
+    ]);
+
+    const classifyText = classifyResult.choices[0].message.content ?? "";
+    const parsed = JSON.parse(classifyText);
+    const coaching = coachingResult.choices[0].message.content ?? "";
 
     return NextResponse.json({
       category: parsed.category,
       tags: parsed.tags,
+      coaching: coaching || null,
     });
   } catch (error) {
     console.error("Classification error:", error);
-    return NextResponse.json({ category: "concept", tags: [] });
+    return NextResponse.json({ category: "concept", tags: [], coaching: null });
   }
 }

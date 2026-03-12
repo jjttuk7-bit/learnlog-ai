@@ -23,12 +23,30 @@ export function CodeCapture({ module, topic, onCapture }: Props) {
     const captureContent = code.trim();
     setCode("");
 
+    let category = "code";
+    let tags: string[] = [];
+    let coaching: string | null = null;
+    try {
+      const res = await fetch("/api/capture/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: captureContent, module, topic }),
+      });
+      const data = await res.json();
+      category = data.category;
+      tags = data.tags;
+      coaching = data.coaching ?? null;
+    } catch {
+      // Fallback to default
+    }
+
     onCapture({
       id: crypto.randomUUID(),
       content: captureContent,
       capture_type: "code",
-      ai_category: "code",
-      ai_tags: [],
+      ai_category: category,
+      ai_tags: tags,
+      ai_coaching: coaching,
       created_at: new Date().toISOString(),
     });
 
