@@ -68,4 +68,8 @@ export const AI_MODELS = {
 
   // Growth analysis — pure data aggregation, no AI call needed
   growthAnalysis: "gpt-4o-mini",
+
+  // AI Tutor — needs deep understanding for comprehensive explanations
+  tutorChat: "gpt-4o",
+  tutorSummarize: "gpt-4o-mini",
 } as const;
