@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain, Download, Share2, Loader2, Check } from "lucide-react";
+import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain, Share2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { DownloadMenu } from "@/components/tutor/download-menu";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { createClient } from "@/lib/supabase/client";
 import { TopicSelector } from "@/components/tutor/topic-selector";
@@ -34,32 +35,6 @@ export default function TutorPage() {
   const [captures, setCaptures] = useState<string[]>([]);
   const [quizSession, setQuizSession] = useState<Session | null>(null);
   const [sharing, setSharing] = useState(false);
-
-  function handleDownload(session: Session) {
-    const date = new Date(session.created_at).toLocaleDateString("ko-KR");
-    let md = `# ${session.topic}\n\n`;
-    md += `> ${date}${session.module ? ` · ${session.module}` : ""}\n\n`;
-    if (session.tags?.length) {
-      md += `**키워드:** ${session.tags.join(", ")}\n\n`;
-    }
-    if (session.summary) {
-      md += `## 학습 노트\n\n${session.summary}\n\n`;
-    }
-    md += `## 대화 내용\n\n`;
-    for (const msg of session.messages) {
-      md += msg.role === "user"
-        ? `### 🙋 질문\n${msg.content}\n\n`
-        : `### 🎓 답변\n${msg.content}\n\n`;
-    }
-    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${session.topic.replace(/[/\\?%*:|"<>]/g, "-")}_${date}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("노트 다운로드 완료");
-  }
 
   async function handleShare(session: Session) {
     setSharing(true);
@@ -174,13 +149,7 @@ export default function TutorPage() {
             <p className="text-xs text-slate-500 ml-7">{date}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleDownload(viewingSession)}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition-colors"
-            >
-              <Download className="w-3.5 h-3.5" />
-              다운로드
-            </button>
+            <DownloadMenu session={viewingSession} />
             <button
               onClick={() => handleShare(viewingSession)}
               disabled={sharing}
