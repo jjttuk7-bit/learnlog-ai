@@ -23,7 +23,7 @@ export function CheckinSession({ module, topic, captures }: Props) {
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
   const [understandingLevel, setUnderstandingLevel] = useState<number | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function CheckinSession({ module, topic, captures }: Props) {
   // 세션을 DB에 저장/업데이트
   async function saveSession(msgs: Message[], level?: number | null) {
     try {
-      if (!sessionId) {
+      if (!sessionIdRef.current) {
         // 새 세션 생성
         const res = await fetch("/api/coach/session", {
           method: "POST",
@@ -41,14 +41,14 @@ export function CheckinSession({ module, topic, captures }: Props) {
           body: JSON.stringify({ session_type: "checkin", messages: msgs }),
         });
         const data = await res.json();
-        if (data.id) setSessionId(data.id);
+        if (data.id) sessionIdRef.current = data.id;
       } else {
         // 기존 세션 업데이트
         await fetch("/api/coach/session", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: sessionId,
+            id: sessionIdRef.current,
             messages: msgs,
             understanding_level: level ?? undefined,
           }),

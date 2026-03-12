@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { CheckinSession } from "@/components/coach/checkin-session";
-import { MessageSquare, BookOpen, FileText, GitBranch, Sparkles, History } from "lucide-react";
+import { MessageSquare, BookOpen, FileText, GitBranch, Sparkles, History, ArrowLeft } from "lucide-react";
+import { ChatMessage } from "@/components/coach/chat-message";
 
 const DAY_ROUTINES: Record<number, { label: string; mode: string; color: string }> = {
   1: { label: "월", mode: "feynman", color: "green" },
@@ -43,6 +44,7 @@ export default function CoachPage() {
   const [mode, setMode] = useState<"select" | "checkin">("select");
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [viewingSession, setViewingSession] = useState<SessionRecord | null>(null);
 
   const module = today?.module ?? "학습 준비";
   const topic = today?.topic ?? "";
@@ -61,6 +63,46 @@ export default function CoachPage() {
     loadSessions();
   }, []);
 
+  // 이전 세션 대화 보기
+  if (viewingSession) {
+    const date = new Date(viewingSession.created_at).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">코칭 기록</h1>
+            <p className="text-slate-400 text-sm mt-0.5">{date}</p>
+          </div>
+          <button
+            onClick={() => setViewingSession(null)}
+            className="flex items-center gap-1 text-sm text-slate-400 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4" /> 돌아가기
+          </button>
+        </div>
+        {viewingSession.understanding_level && (
+          <div className="text-center py-2 text-sm">
+            이해도 레벨:{" "}
+            <span className="text-blue-400 font-bold">
+              {viewingSession.understanding_level}/5
+            </span>
+          </div>
+        )}
+        <div className="space-y-4">
+          {viewingSession.messages?.map((msg, i) => (
+            <ChatMessage key={i} role={msg.role as "user" | "assistant"} content={msg.content} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (mode === "checkin") {
     return (
       <div className="space-y-4">
@@ -68,9 +110,9 @@ export default function CoachPage() {
           <h1 className="text-2xl font-bold">AI 코치</h1>
           <button
             onClick={() => setMode("select")}
-            className="text-sm text-slate-400 hover:text-white"
+            className="flex items-center gap-1 text-sm text-slate-400 hover:text-white"
           >
-            ← 돌아가기
+            <ArrowLeft className="w-4 h-4" /> 돌아가기
           </button>
         </div>
         <CheckinSession module={module} topic={topic} captures={[]} />
@@ -228,9 +270,10 @@ export default function CoachPage() {
                 const preview = session.messages?.[0]?.content?.slice(0, 80) ?? "";
 
                 return (
-                  <div
+                  <button
                     key={session.id}
-                    className="p-4 bg-slate-800 rounded-lg border border-slate-700"
+                    onClick={() => setViewingSession(session)}
+                    className="w-full text-left p-4 bg-slate-800 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-slate-500">{date}</span>
@@ -248,7 +291,7 @@ export default function CoachPage() {
                     <p className="text-sm text-slate-300 line-clamp-2">
                       {preview}...
                     </p>
-                  </div>
+                  </button>
                 );
               })}
             </div>
