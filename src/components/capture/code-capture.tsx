@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import type { CaptureItem } from "@/app/capture/page";
 
 interface Props {
@@ -38,6 +40,23 @@ export function CodeCapture({ module, topic, onCapture }: Props) {
       coaching = data.coaching ?? null;
     } catch {
       // Fallback to default
+    }
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const { error } = await supabase.from("captures").insert({
+        user_id: user.id,
+        capture_type: "code",
+        content: captureContent,
+        ai_category: category,
+        ai_tags: tags,
+        ai_coaching: coaching,
+      });
+      if (error) {
+        toast.error("저장 실패: " + error.message);
+      }
     }
 
     onCapture({
