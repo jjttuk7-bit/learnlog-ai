@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users, NotebookPen } from "lucide-react";
+import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users, NotebookPen, Trash2 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "홈", icon: Home },
@@ -16,6 +16,7 @@ const navItems = [
   { href: "/team", label: "팀", icon: Users },
   { href: "/community", label: "커뮤니티", icon: Users },
   { href: "/my", label: "마이", icon: User },
+  { href: "/trash", label: "휴지통", icon: Trash2 },
 ];
 
 export function MobileNav() {

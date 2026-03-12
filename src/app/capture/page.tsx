@@ -34,6 +34,7 @@ export default function CapturePage() {
         .from("captures")
         .select("id, content, capture_type, ai_category, ai_tags, ai_coaching, created_at")
         .eq("user_id", user.id)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -46,7 +47,12 @@ export default function CapturePage() {
     setCaptures((prev) => [item, ...prev]);
   }
 
-  function removeCapture(id: string) {
+  async function removeCapture(id: string) {
+    try {
+      await fetch(`/api/trash/capture/${id}`, { method: "DELETE" });
+    } catch {
+      // still remove from UI
+    }
     setCaptures((prev) => prev.filter((c) => c.id !== id));
   }
 

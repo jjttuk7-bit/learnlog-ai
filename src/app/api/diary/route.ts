@@ -17,6 +17,7 @@ export async function GET() {
       .from("diary_entries")
       .select("id, title, content, ai_comment, created_at")
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(50);
 
