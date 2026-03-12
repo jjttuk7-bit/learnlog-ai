@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { CheckinSession } from "@/components/coach/checkin-session";
-import { MessageSquare, BookOpen, FileText, GitBranch, Sparkles } from "lucide-react";
+import { MessageSquare, BookOpen, FileText, GitBranch, Sparkles, History } from "lucide-react";
 
 const DAY_ROUTINES: Record<number, { label: string; mode: string; color: string }> = {
   1: { label: "월", mode: "feynman", color: "green" },
@@ -30,13 +30,36 @@ function getTodayRoutine() {
   return DAY_ROUTINES[day] ?? null;
 }
 
+interface SessionRecord {
+  id: string;
+  session_type: string;
+  messages: { role: string; content: string }[];
+  understanding_level: number | null;
+  created_at: string;
+}
+
 export default function CoachPage() {
   const today = getTodayCurriculum();
   const [mode, setMode] = useState<"select" | "checkin">("select");
+  const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const module = today?.module ?? "학습 준비";
   const topic = today?.topic ?? "";
   const todayRoutine = getTodayRoutine();
+
+  useEffect(() => {
+    async function loadSessions() {
+      try {
+        const res = await fetch("/api/coach/session");
+        const data = await res.json();
+        if (data.sessions) setSessions(data.sessions);
+      } catch {
+        // ignore
+      }
+    }
+    loadSessions();
+  }, []);
 
   if (mode === "checkin") {
     return (
@@ -179,6 +202,59 @@ export default function CoachPage() {
           </div>
         </a>
       </div>
+
+      {/* 세션 기록 */}
+      {sessions.length > 0 && (
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          >
+            <History className="w-4 h-4" />
+            이전 코칭 기록 ({sessions.length})
+            <span className="text-xs">{showHistory ? "▲" : "▼"}</span>
+          </button>
+
+          {showHistory && (
+            <div className="space-y-2">
+              {sessions.map((session) => {
+                const date = new Date(session.created_at).toLocaleDateString("ko-KR", {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                const msgCount = session.messages?.length ?? 0;
+                const preview = session.messages?.[0]?.content?.slice(0, 80) ?? "";
+
+                return (
+                  <div
+                    key={session.id}
+                    className="p-4 bg-slate-800 rounded-lg border border-slate-700"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-500">{date}</span>
+                      <div className="flex items-center gap-2">
+                        {session.understanding_level && (
+                          <span className="text-xs text-blue-400">
+                            이해도 {session.understanding_level}/5
+                          </span>
+                        )}
+                        <span className="text-xs text-slate-500">
+                          {msgCount}개 메시지
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-300 line-clamp-2">
+                      {preview}...
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

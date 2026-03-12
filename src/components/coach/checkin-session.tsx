@@ -22,14 +22,42 @@ export function CheckinSession({ module, topic, captures }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [started, setStarted] = useState(false);
-  const [understandingLevel, setUnderstandingLevel] = useState<number | null>(
-    null,
-  );
+  const [understandingLevel, setUnderstandingLevel] = useState<number | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // 세션을 DB에 저장/업데이트
+  async function saveSession(msgs: Message[], level?: number | null) {
+    try {
+      if (!sessionId) {
+        // 새 세션 생성
+        const res = await fetch("/api/coach/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_type: "checkin", messages: msgs }),
+        });
+        const data = await res.json();
+        if (data.id) setSessionId(data.id);
+      } else {
+        // 기존 세션 업데이트
+        await fetch("/api/coach/session", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sessionId,
+            messages: msgs,
+            understanding_level: level ?? undefined,
+          }),
+        });
+      }
+    } catch {
+      // 저장 실패해도 세션은 계속 진행
+    }
+  }
 
   async function startCheckin() {
     setStarted(true);
@@ -42,7 +70,9 @@ export function CheckinSession({ module, topic, captures }: Props) {
         body: JSON.stringify({ captures, module, topic }),
       });
       const data = await res.json();
-      setMessages([{ role: "assistant", content: data.content }]);
+      const newMessages: Message[] = [{ role: "assistant", content: data.content }];
+      setMessages(newMessages);
+      await saveSession(newMessages);
     } catch {
       setMessages([
         {
@@ -58,7 +88,8 @@ export function CheckinSession({ module, topic, captures }: Props) {
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    const withUser = [...messages, { role: "user" as const, content: userMsg }];
+    setMessages(withUser);
     setLoading(true);
 
     try {
@@ -74,18 +105,19 @@ export function CheckinSession({ module, topic, captures }: Props) {
         }),
       });
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.content },
-      ]);
+      const updated = [...withUser, { role: "assistant" as const, content: data.content }];
+      setMessages(updated);
+
+      let level = understandingLevel;
       if (data.understanding_level) {
-        setUnderstandingLevel(data.understanding_level);
+        level = data.understanding_level;
+        setUnderstandingLevel(level);
       }
+      await saveSession(updated, level);
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "평가 중 오류가 발생했습니다." },
-      ]);
+      const updated = [...withUser, { role: "assistant" as const, content: "평가 중 오류가 발생했습니다." }];
+      setMessages(updated);
+      await saveSession(updated);
     }
     setLoading(false);
   }
