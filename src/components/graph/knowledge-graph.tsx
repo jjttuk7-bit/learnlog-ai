@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   ReactFlow,
   Controls,
@@ -195,16 +195,23 @@ export function KnowledgeGraph({ graphNodes, graphEdges, onNodeClick }: Props) {
 
   const flowEdges: Edge[] = useMemo(() => buildFlowEdges(filteredEdges), [filteredEdges]);
 
-  const [nodes, , onNodesChange] = useNodesState(flowNodes);
-  const [edges, , onEdgesChange] = useEdgesState(flowEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges);
 
-  const syncedNodes = useMemo(() => {
-    const map = new Map(nodes.map((n) => [n.id, n.position]));
-    return flowNodes.map((n) => ({
-      ...n,
-      position: map.get(n.id) ?? n.position,
-    }));
-  }, [flowNodes, nodes]);
+  // Sync React Flow internal state when props change (e.g. after API call)
+  useEffect(() => {
+    setNodes((prev) => {
+      const posMap = new Map(prev.map((n) => [n.id, n.position]));
+      return flowNodes.map((n) => ({
+        ...n,
+        position: posMap.get(n.id) ?? n.position,
+      }));
+    });
+  }, [flowNodes, setNodes]);
+
+  useEffect(() => {
+    setEdges(flowEdges);
+  }, [flowEdges, setEdges]);
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -243,7 +250,7 @@ export function KnowledgeGraph({ graphNodes, graphEdges, onNodeClick }: Props) {
 
       <div className="flex-1 rounded-xl overflow-hidden border border-slate-700 min-h-0">
         <ReactFlow
-          nodes={syncedNodes}
+          nodes={nodes}
           edges={flowEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
