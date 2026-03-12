@@ -102,6 +102,7 @@ export function CheckinSession({ module, topic, captures }: Props) {
           answer: userMsg,
           module,
           topic,
+          history: messages,
         }),
       });
       const data = await res.json();
