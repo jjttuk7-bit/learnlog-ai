@@ -76,12 +76,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Team name is required" }, { status: 400 });
     }
 
-    // Create the team
-    const { data: team, error: teamError } = await supabase
+    // Generate ID up-front so we don't need .select() after insert
+    // (RLS SELECT policy requires team membership, which doesn't exist yet)
+    const teamId = crypto.randomUUID();
+
+    const { error: teamError } = await supabase
       .from("teams")
-      .insert({ name: name.trim(), description: description?.trim() ?? null, created_by: user.id })
-      .select()
-      .single();
+      .insert({ id: teamId, name: name.trim(), description: description?.trim() ?? null });
 
     if (teamError) {
       return NextResponse.json({ error: teamError.message }, { status: 500 });
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     // Add creator as leader in team_members
     const { error: memberError } = await supabase.from("team_members").insert({
-      team_id: team.id,
+      team_id: teamId,
       user_id: user.id,
       role: "leader",
     });
@@ -98,7 +99,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: memberError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ team }, { status: 201 });
+    return NextResponse.json({
+      team: { id: teamId, name: name.trim(), description: description?.trim() ?? null },
+    }, { status: 201 });
   } catch (error) {
     console.error("Team POST error:", error);
     return NextResponse.json({ error: "Failed to create team" }, { status: 500 });
