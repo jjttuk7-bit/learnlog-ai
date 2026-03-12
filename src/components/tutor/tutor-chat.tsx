@@ -92,12 +92,47 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
       const updated: Message[] = [...withUser, { role: "assistant", content: data.content }];
       setMessages(updated);
       await saveSession(updated);
+      // Auto-summarize every 6 messages (3 Q&A pairs)
+      if (updated.length > 0 && updated.length % 6 === 0) {
+        autoSummarize(updated);
+      }
     } catch {
       const updated: Message[] = [...withUser, { role: "assistant", content: "응답을 생성하지 못했습니다. 잠시 후 다시 시도해주세요." }];
       setMessages(updated);
     }
     setLoading(false);
   }
+
+  // Auto-summarize in background (no UI blocking)
+  async function autoSummarize(msgs: Message[]) {
+    try {
+      await fetch("/api/tutor/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: sessionIdRef.current, messages: msgs }),
+      });
+      onSessionSaved();
+    } catch {
+      // silent fail
+    }
+  }
+
+  // Auto-summarize on page leave
+  useEffect(() => {
+    function handleBeforeUnload() {
+      if (messages.length >= 2 && sessionIdRef.current) {
+        navigator.sendBeacon(
+          "/api/tutor/summarize",
+          new Blob(
+            [JSON.stringify({ sessionId: sessionIdRef.current, messages })],
+            { type: "application/json" }
+          )
+        );
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [messages]);
 
   async function handleSummarize() {
     if (messages.length < 2 || summarizing) return;
@@ -115,12 +150,7 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
     setSummarizing(false);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  }
+  // Enter = 줄바꿈, 제출은 버튼으로만
 
   const modeColorMap: Record<string, string> = {
     emerald: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
@@ -130,7 +160,7 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
   };
 
   const placeholders: Record<ChatMode, string> = {
-    normal: "질문을 입력하세요... (Shift+Enter 줄바꿈)",
+    normal: "질문을 입력하세요...",
     error: "에러 메시지를 붙여넣으세요...",
     code: "이해하고 싶은 코드를 붙여넣으세요...",
     diagram: "시각화할 개념을 입력하세요...",
@@ -275,7 +305,6 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
           placeholder={placeholders[chatMode]}
           className="bg-slate-800 border-slate-700 text-slate-100 resize-none min-h-[56px] max-h-[120px] placeholder:text-slate-500"
           disabled={loading}
