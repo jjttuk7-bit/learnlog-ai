@@ -3,13 +3,23 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2, BookmarkPlus, ArrowLeft } from "lucide-react";
+import { Send, Loader2, BookmarkPlus, ArrowLeft, AlertTriangle, Code2, MessageSquare, GitBranch } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { MermaidDiagram } from "./mermaid-diagram";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+type ChatMode = "normal" | "error" | "code" | "diagram";
+
+const MODES: { key: ChatMode; label: string; icon: React.ReactNode; color: string }[] = [
+  { key: "normal", label: "일반", icon: <MessageSquare className="w-3.5 h-3.5" />, color: "emerald" },
+  { key: "error", label: "에러 분석", icon: <AlertTriangle className="w-3.5 h-3.5" />, color: "red" },
+  { key: "code", label: "코드 설명", icon: <Code2 className="w-3.5 h-3.5" />, color: "blue" },
+  { key: "diagram", label: "다이어그램", icon: <GitBranch className="w-3.5 h-3.5" />, color: "purple" },
+];
 
 interface Props {
   topic: string;
@@ -18,13 +28,15 @@ interface Props {
   onSessionSaved: () => void;
   initialMessages?: Message[];
   initialSessionId?: string;
+  captures?: string[];
 }
 
-export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessages, initialSessionId }: Props) {
+export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessages, initialSessionId, captures }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
+  const [chatMode, setChatMode] = useState<ChatMode>("normal");
   const sessionIdRef = useRef<string | null>(initialSessionId ?? null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -72,6 +84,8 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
           history: messages,
           topic,
           module,
+          mode: chatMode,
+          captures,
         }),
       });
       const data = await res.json();
@@ -108,6 +122,20 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
     }
   }
 
+  const modeColorMap: Record<string, string> = {
+    emerald: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    red: "bg-red-500/20 text-red-400 border-red-500/30",
+    blue: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    purple: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  };
+
+  const placeholders: Record<ChatMode, string> = {
+    normal: "질문을 입력하세요... (Shift+Enter 줄바꿈)",
+    error: "에러 메시지를 붙여넣으세요...",
+    code: "이해하고 싶은 코드를 붙여넣으세요...",
+    diagram: "시각화할 개념을 입력하세요...",
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-4rem)]">
       {/* Header */}
@@ -123,22 +151,47 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
             {module && <p className="text-xs text-slate-500">{module}</p>}
           </div>
         </div>
-        {messages.length >= 2 && (
-          <Button
-            onClick={handleSummarize}
-            disabled={summarizing}
-            variant="outline"
-            size="sm"
-            className="border-slate-700 text-slate-300 hover:text-white gap-1.5"
+        <div className="flex items-center gap-2">
+          {captures && captures.length > 0 && (
+            <span className="text-[10px] px-2 py-0.5 bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded">
+              캡처 {captures.length}개 연동
+            </span>
+          )}
+          {messages.length >= 2 && (
+            <Button
+              onClick={handleSummarize}
+              disabled={summarizing}
+              variant="outline"
+              size="sm"
+              className="border-slate-700 text-slate-300 hover:text-white gap-1.5"
+            >
+              {summarizing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <BookmarkPlus className="w-3.5 h-3.5" />
+              )}
+              {summarizing ? "정리 중..." : "노트 저장"}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Mode Selector */}
+      <div className="flex gap-1.5 py-2 flex-shrink-0">
+        {MODES.map((m) => (
+          <button
+            key={m.key}
+            onClick={() => setChatMode(m.key)}
+            className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
+              chatMode === m.key
+                ? modeColorMap[m.color]
+                : "bg-slate-800/50 text-slate-500 border-slate-700 hover:text-slate-300"
+            }`}
           >
-            {summarizing ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <BookmarkPlus className="w-3.5 h-3.5" />
-            )}
-            {summarizing ? "정리 중..." : "노트 저장"}
-          </Button>
-        )}
+            {m.icon}
+            {m.label}
+          </button>
+        ))}
       </div>
 
       {/* Messages */}
@@ -152,23 +205,22 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
               <p className="text-white font-medium">무엇이든 질문하세요!</p>
               <p className="text-sm text-slate-400 max-w-md">
                 개념, 코드, 에러, 수학 공식 등 학습 중 궁금한 것을
-                <br />
-                쉬운 설명과 예시로 답변해드립니다
+                <br />쉬운 설명과 예시로 답변해드립니다
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-2 mt-2">
               {[
-                "이 개념이 뭐예요?",
-                "코드가 이해가 안 돼요",
-                "에러가 났어요",
-                "예시를 보여주세요",
+                { text: "이 개념이 뭐예요?", mode: "normal" as ChatMode },
+                { text: "에러 메시지 분석해주세요", mode: "error" as ChatMode },
+                { text: "이 코드 설명해주세요", mode: "code" as ChatMode },
+                { text: "구조를 그림으로 보여주세요", mode: "diagram" as ChatMode },
               ].map((hint) => (
                 <button
-                  key={hint}
-                  onClick={() => setInput(hint + " ")}
+                  key={hint.text}
+                  onClick={() => { setChatMode(hint.mode); setInput(hint.text + " "); }}
                   className="text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-full text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
                 >
-                  {hint}
+                  {hint.text}
                 </button>
               ))}
             </div>
@@ -189,7 +241,17 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
             >
               {msg.role === "assistant" ? (
                 <div className="prose prose-invert prose-sm max-w-none [&_pre]:bg-slate-900 [&_pre]:border [&_pre]:border-slate-600 [&_pre]:rounded-lg [&_code]:text-emerald-400 [&_h3]:text-base [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1.5">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <ReactMarkdown
+                    components={{
+                      code({ className, children, ...props }) {
+                        const match = /language-mermaid/.exec(className || "");
+                        if (match) {
+                          return <MermaidDiagram chart={String(children).trim()} />;
+                        }
+                        return <code className={className} {...props}>{children}</code>;
+                      },
+                    }}
+                  >{msg.content}</ReactMarkdown>
                 </div>
               ) : (
                 <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -214,7 +276,7 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="질문을 입력하세요... (Shift+Enter 줄바꿈, Enter 전송)"
+          placeholder={placeholders[chatMode]}
           className="bg-slate-800 border-slate-700 text-slate-100 resize-none min-h-[56px] max-h-[120px] placeholder:text-slate-500"
           disabled={loading}
         />

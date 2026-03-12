@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { GraduationCap, Plus, BookOpen, ArrowLeft } from "lucide-react";
+import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain } from "lucide-react";
 import { getTodayCurriculum } from "@/lib/curriculum";
+import { createClient } from "@/lib/supabase/client";
 import { TopicSelector } from "@/components/tutor/topic-selector";
 import { TutorChat } from "@/components/tutor/tutor-chat";
 import { NoteList } from "@/components/tutor/note-list";
+import { QuizModal } from "@/components/tutor/quiz-modal";
 import { ChatMessage } from "@/components/coach/chat-message";
 
 interface Session {
@@ -28,6 +30,8 @@ export default function TutorPage() {
   const [viewingSession, setViewingSession] = useState<Session | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTopic, setFilterTopic] = useState("");
+  const [captures, setCaptures] = useState<string[]>([]);
+  const [quizSession, setQuizSession] = useState<Session | null>(null);
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -41,9 +45,35 @@ export default function TutorPage() {
     }
   }, []);
 
+  // Fetch today's captures for context
+  const fetchCaptures = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const todayStr = new Date().toISOString().split("T")[0];
+      const { data } = await supabase
+        .from("captures")
+        .select("content")
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
+        .gte("created_at", todayStr + "T00:00:00")
+        .lte("created_at", todayStr + "T23:59:59")
+        .order("created_at", { ascending: false });
+
+      if (data) {
+        setCaptures(data.map((c) => c.content));
+      }
+    } catch {
+      // ignore - captures are optional context
+    }
+  }, []);
+
   useEffect(() => {
     fetchSessions();
-  }, [fetchSessions]);
+    fetchCaptures();
+  }, [fetchSessions, fetchCaptures]);
 
   function startNewChat() {
     setMode("chat");
@@ -86,12 +116,23 @@ export default function TutorPage() {
             </div>
             <p className="text-xs text-slate-500 ml-7">{date}</p>
           </div>
-          <button
-            onClick={() => handleContinueSession(viewingSession)}
-            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            대화 이어가기 →
-          </button>
+          <div className="flex items-center gap-2">
+            {viewingSession.summary && (
+              <button
+                onClick={() => setQuizSession(viewingSession)}
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg hover:bg-purple-500/20 transition-colors"
+              >
+                <Brain className="w-3.5 h-3.5" />
+                복습 퀴즈
+              </button>
+            )}
+            <button
+              onClick={() => handleContinueSession(viewingSession)}
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              대화 이어가기 →
+            </button>
+          </div>
         </div>
 
         {viewingSession.summary && (
@@ -109,6 +150,14 @@ export default function TutorPage() {
             <ChatMessage key={i} role={msg.role as "user" | "assistant"} content={msg.content} />
           ))}
         </div>
+
+        {quizSession && (
+          <QuizModal
+            sessionId={quizSession.id}
+            topic={quizSession.topic}
+            onClose={() => setQuizSession(null)}
+          />
+        )}
       </div>
     );
   }
@@ -126,6 +175,7 @@ export default function TutorPage() {
           content: m.content,
         }))}
         initialSessionId={viewingSession?.id}
+        captures={captures}
       />
     );
   }
@@ -142,6 +192,17 @@ export default function TutorPage() {
         </div>
         <p className="text-slate-400 mt-1">학습 중 궁금한 것을 질문하고, 정리된 노트로 복습하세요</p>
       </div>
+
+      {/* Capture Context Banner */}
+      {captures.length > 0 && (
+        <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 flex items-center gap-3">
+          <span className="text-lg">📋</span>
+          <div className="flex-1">
+            <p className="text-sm text-yellow-400 font-medium">오늘의 캡처 {captures.length}개 연동됨</p>
+            <p className="text-xs text-slate-500">튜터가 오늘 학습한 내용을 참고하여 답변합니다</p>
+          </div>
+        </div>
+      )}
 
       {/* New Chat Section */}
       <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
@@ -195,6 +256,14 @@ export default function TutorPage() {
           onSearchChange={setSearchQuery}
           filterTopic={filterTopic}
           onFilterTopicChange={setFilterTopic}
+        />
+      )}
+
+      {quizSession && (
+        <QuizModal
+          sessionId={quizSession.id}
+          topic={quizSession.topic}
+          onClose={() => setQuizSession(null)}
         />
       )}
     </div>
