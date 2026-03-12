@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain } from "lucide-react";
+import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain, Download, Share2, Loader2, Check } from "lucide-react";
+import { toast } from "sonner";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { createClient } from "@/lib/supabase/client";
 import { TopicSelector } from "@/components/tutor/topic-selector";
@@ -32,6 +33,62 @@ export default function TutorPage() {
   const [filterTopic, setFilterTopic] = useState("");
   const [captures, setCaptures] = useState<string[]>([]);
   const [quizSession, setQuizSession] = useState<Session | null>(null);
+  const [sharing, setSharing] = useState(false);
+
+  function handleDownload(session: Session) {
+    const date = new Date(session.created_at).toLocaleDateString("ko-KR");
+    let md = `# ${session.topic}\n\n`;
+    md += `> ${date}${session.module ? ` · ${session.module}` : ""}\n\n`;
+    if (session.tags?.length) {
+      md += `**키워드:** ${session.tags.join(", ")}\n\n`;
+    }
+    if (session.summary) {
+      md += `## 학습 노트\n\n${session.summary}\n\n`;
+    }
+    md += `## 대화 내용\n\n`;
+    for (const msg of session.messages) {
+      md += msg.role === "user"
+        ? `### 🙋 질문\n${msg.content}\n\n`
+        : `### 🎓 답변\n${msg.content}\n\n`;
+    }
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${session.topic.replace(/[/\\?%*:|"<>]/g, "-")}_${date}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("노트 다운로드 완료");
+  }
+
+  async function handleShare(session: Session) {
+    setSharing(true);
+    try {
+      const res = await fetch("/api/tutor/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: session.id }),
+      });
+      const data = await res.json();
+      if (data.token) {
+        const shareUrl = `${window.location.origin}/tutor/share/${data.token}`;
+        // Try Web Share API first (mobile)
+        if (navigator.share) {
+          await navigator.share({
+            title: `학습 노트: ${session.topic}`,
+            text: session.summary?.slice(0, 100) || session.topic,
+            url: shareUrl,
+          });
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          toast.success("공유 링크가 복사되었습니다!");
+        }
+      }
+    } catch {
+      toast.error("공유 링크 생성 실패");
+    }
+    setSharing(false);
+  }
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -117,20 +174,35 @@ export default function TutorPage() {
             <p className="text-xs text-slate-500 ml-7">{date}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleDownload(viewingSession)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              다운로드
+            </button>
+            <button
+              onClick={() => handleShare(viewingSession)}
+              disabled={sharing}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-lg hover:bg-blue-500/20 transition-colors"
+            >
+              {sharing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" />}
+              공유
+            </button>
             {viewingSession.summary && (
               <button
                 onClick={() => setQuizSession(viewingSession)}
                 className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg hover:bg-purple-500/20 transition-colors"
               >
                 <Brain className="w-3.5 h-3.5" />
-                복습 퀴즈
+                퀴즈
               </button>
             )}
             <button
               onClick={() => handleContinueSession(viewingSession)}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              대화 이어가기 →
+              이어가기 →
             </button>
           </div>
         </div>
