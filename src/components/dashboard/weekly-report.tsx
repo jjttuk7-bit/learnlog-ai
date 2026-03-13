@@ -22,8 +22,6 @@ export function WeeklyReport() {
     try {
       const res = await fetch("/api/report/weekly", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: "local", week_number: getCurrentWeek() }),
       });
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
@@ -146,10 +144,4 @@ export function WeeklyReport() {
       )}
     </div>
   );
-}
-
-function getCurrentWeek(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 1);
-  return Math.ceil(((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7);
 }

@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     // If no API key, return default classification
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ category: "concept", tags: [], coaching: null });
+      return NextResponse.json({ category: "concept", tags: [], coaching: null, suggestedTerms: [] });
     }
 
     const classifyPrompt = `당신은 AI 엔지니어링 학습 기록 분류기입니다.
@@ -28,8 +28,13 @@ export async function POST(request: NextRequest) {
 
 또한 관련 키워드 태그를 3~5개 추출하세요.
 
+추가로, 학습 기록에서 비전공자가 용어 사전에 추가하면 좋을 핵심 AI/ML/프로그래밍 전문 용어를 0~3개 추출하세요.
+- 일반적인 한국어 단어는 제외하고, 기술 전문 용어만 추출
+- 영어 용어는 영어 그대로, 한국어 용어는 한국어 그대로
+- 예: "Transformer", "역전파", "CNN", "학습률", "과적합"
+
 반드시 아래 JSON 형식으로만 응답하세요:
-{"category": "concept|code|question|insight", "tags": ["태그1", "태그2"]}`;
+{"category": "concept|code|question|insight", "tags": ["태그1", "태그2"], "suggestedTerms": ["용어1"]}`;
 
     const coachingPrompt = `당신은 메타인지 학습 코치입니다. 학습자가 기록한 내용을 보고 짧은 코칭 피드백을 제공합니다.
 
@@ -74,9 +79,10 @@ export async function POST(request: NextRequest) {
       category: parsed.category,
       tags: parsed.tags,
       coaching: coaching || null,
+      suggestedTerms: parsed.suggestedTerms ?? [],
     });
   } catch (error) {
     console.error("Classification error:", error);
-    return NextResponse.json({ category: "concept", tags: [], coaching: null });
+    return NextResponse.json({ category: "concept", tags: [], coaching: null, suggestedTerms: [] });
   }
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Briefcase, Plus, Lightbulb, Rocket, Pause, Loader2 } from "lucide-react";
+import { Briefcase, Plus, Lightbulb, Rocket, Pause, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 
 interface BusinessIdea {
@@ -26,6 +27,24 @@ export default function BusinessPage() {
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [synergy, setSynergy] = useState<string | null>(null);
+  const [analyzingSynergy, setAnalyzingSynergy] = useState(false);
+
+  async function analyzeSynergy() {
+    setAnalyzingSynergy(true);
+    try {
+      const res = await fetch("/api/business/synergy", { method: "POST" });
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+      } else if (data.analysis) {
+        setSynergy(data.analysis);
+      }
+    } catch {
+      toast.error("시너지 분석 실패");
+    }
+    setAnalyzingSynergy(false);
+  }
 
   const fetchIdeas = useCallback(async () => {
     try {
@@ -156,6 +175,39 @@ export default function BusinessPage() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* Synergy Analysis */}
+      {ideas.filter((i) => i.status !== "paused").length >= 2 && (
+        <div className="bg-gradient-to-br from-violet-500/10 to-cyan-500/10 rounded-xl p-5 border border-violet-500/20 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-violet-400" />
+              <span className="font-semibold text-violet-300">아이디어 간 시너지 분석</span>
+            </div>
+            <button
+              onClick={analyzeSynergy}
+              disabled={analyzingSynergy}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-violet-600 hover:bg-violet-500 disabled:bg-slate-700 text-white rounded-lg transition-colors"
+            >
+              {analyzingSynergy ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> 분석 중...</>
+              ) : (
+                <><Sparkles className="w-3.5 h-3.5" /> AI 분석</>
+              )}
+            </button>
+          </div>
+          {!synergy && !analyzingSynergy && (
+            <p className="text-sm text-slate-400">
+              활성 아이디어들 간의 시너지, 공유 자원, 통합 가능성을 AI가 분석합니다
+            </p>
+          )}
+          {synergy && (
+            <div className="bg-slate-800/50 rounded-lg p-4 prose prose-invert prose-sm max-w-none [&_h3]:text-base [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1.5">
+              <ReactMarkdown>{synergy}</ReactMarkdown>
+            </div>
+          )}
         </div>
       )}
     </div>

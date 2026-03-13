@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Briefcase, Lightbulb, Rocket, Pause, Send, Loader2, Trash2, Sparkles } from "lucide-react";
+import { ArrowLeft, Briefcase, Lightbulb, Rocket, Pause, Send, Loader2, Trash2, Sparkles, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { VoiceInputButton } from "@/components/ui/voice-input-button";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { getTodayCurriculum } from "@/lib/curriculum";
@@ -57,7 +58,7 @@ export default function BusinessDetailPage() {
   const [idea, setIdea] = useState<BusinessIdea | null>(null);
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"canvas" | "insights" | "chat">("canvas");
+  const [tab, setTab] = useState<"canvas" | "insights" | "chat" | "competitor" | "pitch">("canvas");
 
   // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
@@ -67,6 +68,67 @@ export default function BusinessDetailPage() {
 
   // Insight generation
   const [generatingInsight, setGeneratingInsight] = useState(false);
+
+  // Competitor analysis
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<string | null>(null);
+  const [analyzingCompetitor, setAnalyzingCompetitor] = useState(false);
+
+  // Pitch deck
+  const [pitchDeck, setPitchDeck] = useState<string | null>(null);
+  const [generatingPitch, setGeneratingPitch] = useState(false);
+
+  function shareIdea() {
+    if (!idea) return;
+    const canvas = idea.canvas || {};
+    const canvasText = Object.entries(CANVAS_LABELS)
+      .map(([key, config]) => `${config.label}: ${canvas[key] || "미작성"}`)
+      .join("\n");
+    const insightsText = insights.length > 0
+      ? "\n\n학습 연결 인사이트:\n" + insights.slice(0, 5).map((i) => `- [${i.skill_learned}] ${i.insight}`).join("\n")
+      : "";
+    const status = statusOptions.find((s) => s.value === idea.status);
+    const text = `[LearnLog AI 비즈니스 아이디어]\n\n${idea.title}\n상태: ${status?.label || idea.status}\n\n${canvasText}${insightsText}`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success("아이디어가 클립보드에 복사되었습니다!");
+    }).catch(() => {
+      toast.error("복사 실패");
+    });
+  }
+
+  async function generatePitch() {
+    if (generatingPitch) return;
+    setGeneratingPitch(true);
+    try {
+      const res = await fetch("/api/business/pitch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ideaId: id }),
+      });
+      const data = await res.json();
+      if (data.pitch) setPitchDeck(data.pitch);
+    } catch {
+      toast.error("피치덱 생성 실패");
+    }
+    setGeneratingPitch(false);
+  }
+
+  async function analyzeCompetitor() {
+    if (analyzingCompetitor) return;
+    setAnalyzingCompetitor(true);
+    try {
+      const res = await fetch("/api/business/competitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ideaId: id }),
+      });
+      const data = await res.json();
+      if (data.analysis) setCompetitorAnalysis(data.analysis);
+    } catch {
+      toast.error("경쟁사 분석 실패");
+    }
+    setAnalyzingCompetitor(false);
+  }
 
   const fetchData = useCallback(async () => {
     try {
@@ -210,9 +272,14 @@ export default function BusinessDetailPage() {
             ))}
           </div>
         </div>
-        <button onClick={deleteIdea} className="text-red-400 hover:text-red-300 p-2">
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="flex gap-1">
+          <button onClick={shareIdea} className="text-slate-400 hover:text-white p-2" title="공유하기">
+            <Share2 className="w-4 h-4" />
+          </button>
+          <button onClick={deleteIdea} className="text-red-400 hover:text-red-300 p-2">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -221,6 +288,8 @@ export default function BusinessDetailPage() {
           { key: "canvas" as const, label: `캔버스 (${filledCount}/${canvasKeys.length})` },
           { key: "insights" as const, label: `인사이트 (${insights.length})` },
           { key: "chat" as const, label: "AI 토론" },
+          { key: "competitor" as const, label: "경쟁사 분석" },
+          { key: "pitch" as const, label: "피치덱" },
         ].map((t) => (
           <button
             key={t.key}
@@ -300,6 +369,68 @@ export default function BusinessDetailPage() {
         </div>
       )}
 
+      {/* Pitch Deck Tab */}
+      {tab === "pitch" && (
+        <div className="space-y-4">
+          <Button
+            onClick={generatePitch}
+            disabled={generatingPitch}
+            size="sm"
+            className="bg-violet-600 hover:bg-violet-500"
+          >
+            {generatingPitch ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-1.5" /> 피치덱 생성 중...</>
+            ) : (
+              <><Sparkles className="w-4 h-4 mr-1.5" /> 10장 피치덱 초안 생성</>
+            )}
+          </Button>
+
+          {!pitchDeck && !generatingPitch && (
+            <div className="text-center py-12 text-slate-500 text-sm">
+              캔버스를 기반으로 10장 피치덱 초안을 AI가 자동 생성합니다.<br />
+              캔버스 항목을 최대한 채워두면 더 좋은 결과를 얻을 수 있습니다.
+            </div>
+          )}
+
+          {pitchDeck && (
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 prose prose-invert prose-sm max-w-none [&_h3]:text-base [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-violet-300 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1.5">
+              <ReactMarkdown>{pitchDeck}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Competitor Tab */}
+      {tab === "competitor" && (
+        <div className="space-y-4">
+          <Button
+            onClick={analyzeCompetitor}
+            disabled={analyzingCompetitor}
+            size="sm"
+            className="bg-violet-600 hover:bg-violet-500"
+          >
+            {analyzingCompetitor ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-1.5" /> 분석 중...</>
+            ) : (
+              <><Sparkles className="w-4 h-4 mr-1.5" /> 경쟁사 분석 시작</>
+            )}
+          </Button>
+
+          {!competitorAnalysis && !analyzingCompetitor && (
+            <div className="text-center py-12 text-slate-500 text-sm">
+              위 버튼을 눌러 AI 경쟁사 분석을 시작하세요.<br />
+              캔버스 정보가 많을수록 더 정확한 분석이 가능합니다.
+            </div>
+          )}
+
+          {competitorAnalysis && (
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 prose prose-invert prose-sm max-w-none [&_h3]:text-base [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1.5">
+              <ReactMarkdown>{competitorAnalysis}</ReactMarkdown>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Chat Tab */}
       {tab === "chat" && (
         <div className="flex flex-col h-[calc(100vh-20rem)]">
@@ -363,14 +494,17 @@ export default function BusinessDetailPage() {
               className="bg-slate-800 border-slate-700 text-slate-100 resize-none min-h-[56px] max-h-[120px] placeholder:text-slate-500"
               disabled={chatLoading}
             />
-            <Button
-              onClick={sendChat}
-              disabled={chatLoading || !chatInput.trim()}
-              size="sm"
-              className="self-end bg-violet-600 hover:bg-violet-500"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            <div className="flex flex-col gap-1 self-end">
+              <VoiceInputButton onTranscript={(text) => setChatInput((prev) => prev ? prev + " " + text : text)} />
+              <Button
+                onClick={sendChat}
+                disabled={chatLoading || !chatInput.trim()}
+                size="sm"
+                className="bg-violet-600 hover:bg-violet-500"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}

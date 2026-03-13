@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { BookA, Search, Trash2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { BookA, Search, Trash2, MessageSquare, ChevronDown, ChevronUp, BookOpen, Share2 } from "lucide-react";
 import { MODULES } from "@/data/curriculum";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
@@ -44,6 +44,25 @@ export default function GlossaryPage() {
     const timer = setTimeout(() => fetchTerms(), 300);
     return () => clearTimeout(timer);
   }, [fetchTerms]);
+
+  function shareTerms() {
+    if (terms.length === 0) return;
+    const text = terms.map((t) => {
+      const modulePart = t.module ? ` [${t.module}]` : "";
+      const related = t.related_terms.length > 0 ? `\n  연관: ${t.related_terms.join(", ")}` : "";
+      // Strip markdown from definition for clean text
+      const cleanDef = t.definition.replace(/[#*`_~]/g, "").replace(/\n{2,}/g, "\n").trim();
+      const shortDef = cleanDef.length > 150 ? cleanDef.slice(0, 150) + "..." : cleanDef;
+      return `${t.term}${modulePart}\n  ${shortDef}${related}`;
+    }).join("\n\n");
+
+    const header = `LearnLog AI 용어 사전 (${terms.length}개 용어)\n${"=".repeat(40)}\n\n`;
+    navigator.clipboard.writeText(header + text).then(() => {
+      toast.success("용어 목록이 클립보드에 복사되었습니다!");
+    }).catch(() => {
+      toast.error("복사 실패");
+    });
+  }
 
   async function deleteTerm(id: string) {
     try {
@@ -107,6 +126,15 @@ export default function GlossaryPage() {
       <div className="flex items-center gap-4 text-sm text-slate-400">
         <span>총 <span className="text-amber-400 font-medium">{terms.length}</span>개 용어</span>
         {moduleFilter && <span>필터: <span className="text-blue-400">{moduleFilter}</span></span>}
+        {terms.length > 0 && (
+          <button
+            onClick={shareTerms}
+            className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 text-slate-400 rounded-lg hover:text-white hover:border-slate-500 transition-colors"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            공유하기
+          </button>
+        )}
       </div>
 
       {/* Terms */}
@@ -201,6 +229,13 @@ export default function GlossaryPage() {
                               {new Date(term.updated_at).toLocaleDateString("ko-KR")} 학습
                             </span>
                             <div className="flex gap-2">
+                              <Link
+                                href={`/coach/feynman?concept=${encodeURIComponent(term.term)}&module=${encodeURIComponent(term.module || "")}`}
+                                className="flex items-center gap-1 text-xs px-2.5 py-1.5 bg-green-500/10 text-green-400 border border-green-500/20 rounded-lg hover:bg-green-500/20 transition-colors"
+                              >
+                                <BookOpen className="w-3 h-3" />
+                                파인만으로 설명하기
+                              </Link>
                               <Link
                                 href={`/tutor?mode=glossary&term=${encodeURIComponent(term.term)}`}
                                 className="flex items-center gap-1 text-xs px-2.5 py-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg hover:bg-amber-500/20 transition-colors"

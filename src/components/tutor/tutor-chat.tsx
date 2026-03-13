@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, BookmarkPlus, ArrowLeft, AlertTriangle, Code2, MessageSquare, GitBranch } from "lucide-react";
+import { VoiceInputButton } from "@/components/ui/voice-input-button";
 import ReactMarkdown from "react-markdown";
 import { MermaidDiagram } from "./mermaid-diagram";
 
@@ -338,14 +339,17 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
           className="bg-slate-800 border-slate-700 text-slate-100 resize-none min-h-[56px] max-h-[120px] placeholder:text-slate-500"
           disabled={loading}
         />
-        <Button
-          onClick={sendMessage}
-          disabled={loading || !input.trim()}
-          size="sm"
-          className="self-end bg-emerald-600 hover:bg-emerald-500"
-        >
-          <Send className="w-4 h-4" />
-        </Button>
+        <div className="flex flex-col gap-1 self-end">
+          <VoiceInputButton onTranscript={(text) => setInput((prev) => prev ? prev + " " + text : text)} />
+          <Button
+            onClick={sendMessage}
+            disabled={loading || !input.trim()}
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-500"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

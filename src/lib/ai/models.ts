@@ -76,4 +76,5 @@ export const AI_MODELS = {
   // Business model — insight is concise, chat/canvas needs depth
   businessInsight: "gpt-4o-mini",
   businessChat: "gpt-4o",
+  businessSynergy: "gpt-4o",
 } as const;

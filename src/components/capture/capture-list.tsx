@@ -2,7 +2,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, BookA } from "lucide-react";
+import Link from "next/link";
 import type { CaptureItem } from "@/app/capture/page";
 
 const categoryStyles: Record<string, { label: string; className: string }> = {
@@ -111,6 +112,26 @@ export function CaptureList({ captures, onRemove }: Props) {
                 <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
                   {item.ai_coaching}
                 </p>
+              </div>
+            )}
+            {item.ai_suggested_terms && item.ai_suggested_terms.length > 0 && (
+              <div className="mt-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <BookA className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-xs font-medium text-emerald-400">용어 사전에 추가하기</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.ai_suggested_terms.map((term) => (
+                    <Link
+                      key={term}
+                      href={`/tutor?mode=glossary&term=${encodeURIComponent(term)}`}
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1 bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 rounded-full hover:bg-emerald-500/20 transition-colors"
+                    >
+                      <BookA className="w-3 h-3" />
+                      {term}
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -17,6 +17,7 @@ export interface CaptureItem {
   ai_category: string | null;
   ai_tags: string[] | null;
   ai_coaching: string | null;
+  ai_suggested_terms?: string[] | null;
   created_at: string;
 }
 

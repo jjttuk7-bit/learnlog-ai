@@ -29,6 +29,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
     let category = "concept";
     let tags: string[] = [];
     let coaching: string | null = null;
+    let suggestedTerms: string[] = [];
     try {
       const res = await fetch("/api/capture/classify", {
         method: "POST",
@@ -39,6 +40,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
       category = data.category;
       tags = data.tags;
       coaching = data.coaching ?? null;
+      suggestedTerms = data.suggestedTerms ?? [];
     } catch {
       // Fallback to default
     }
@@ -67,6 +69,7 @@ export function TextCapture({ module, topic, onCapture }: Props) {
       ai_category: category,
       ai_tags: tags,
       ai_coaching: coaching,
+      ai_suggested_terms: suggestedTerms.length > 0 ? suggestedTerms : null,
       created_at: new Date().toISOString(),
     });
 
