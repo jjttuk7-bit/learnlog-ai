@@ -73,10 +73,10 @@ export function UpcomingPreview() {
           return (
             <div
               key={day.dayNumber}
-              className={`rounded-xl border overflow-hidden transition-colors ${
+              className={`rounded-xl border overflow-hidden transition-all duration-200 ${
                 isToday
-                  ? "bg-amber-500/10 border-amber-500/30"
-                  : "bg-slate-800 border-slate-700"
+                  ? "bg-amber-500/10 border-amber-500/30 ring-1 ring-amber-500/10"
+                  : "bg-white/[0.03] border-white/[0.06] hover:border-white/[0.1]"
               }`}
             >
               <button
@@ -123,7 +123,7 @@ export function UpcomingPreview() {
               </button>
 
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-slate-700">
+                <div className="px-4 pb-4 border-t border-white/[0.06]">
                   {isLoading ? (
                     <div className="flex items-center gap-2 py-6 justify-center text-sm text-slate-400">
                       <Loader2 className="w-4 h-4 animate-spin" />

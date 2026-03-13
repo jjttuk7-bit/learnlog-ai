@@ -37,7 +37,7 @@ export function LearningPatterns() {
   if (loading) return <div className="text-center py-8 text-slate-500 text-sm">패턴 분석 중...</div>;
   if (!data || data.totalCaptures === 0) {
     return (
-      <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 text-center text-slate-500 text-sm">
+      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-6 border border-white/[0.06] text-center text-slate-500 text-sm">
         캡처 데이터가 없습니다. 학습 캡처를 시작하면 패턴이 분석됩니다.
       </div>
     );
@@ -46,11 +46,9 @@ export function LearningPatterns() {
   const maxHourly = Math.max(...data.hourly, 1);
   const peakHour = data.hourly.indexOf(Math.max(...data.hourly));
 
-  // Category chart data
   const categoryEntries = Object.entries(data.categories).sort((a, b) => b[1] - a[1]);
   const totalCat = categoryEntries.reduce((s, [, v]) => s + v, 0) || 1;
 
-  // Daily streak
   const dailyValues = Object.values(data.daily);
   const avgDaily = dailyValues.length > 0 ? (dailyValues.reduce((s, v) => s + v, 0) / dailyValues.length).toFixed(1) : "0";
   const activeDays = dailyValues.length;
@@ -65,22 +63,22 @@ export function LearningPatterns() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 text-center">
+        <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-4 border border-white/[0.06] text-center">
           <p className="text-2xl font-bold text-cyan-400">{data.totalCaptures}</p>
           <p className="text-xs text-slate-400 mt-1">총 캡처</p>
         </div>
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 text-center">
+        <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-4 border border-white/[0.06] text-center">
           <p className="text-2xl font-bold text-green-400">{activeDays}</p>
           <p className="text-xs text-slate-400 mt-1">활동 일수</p>
         </div>
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700 text-center">
+        <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-4 border border-white/[0.06] text-center">
           <p className="text-2xl font-bold text-amber-400">{avgDaily}</p>
           <p className="text-xs text-slate-400 mt-1">일 평균</p>
         </div>
       </div>
 
       {/* Hourly Distribution */}
-      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-3">
+      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-5 border border-white/[0.06] space-y-3">
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-blue-400" />
           <span className="text-sm font-medium">시간대별 학습 활동</span>
@@ -107,12 +105,11 @@ export function LearningPatterns() {
       </div>
 
       {/* Category Distribution */}
-      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-3">
+      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-5 border border-white/[0.06] space-y-3">
         <div className="flex items-center gap-2">
           <Tag className="w-4 h-4 text-purple-400" />
           <span className="text-sm font-medium">카테고리 분포</span>
         </div>
-        {/* Stacked bar */}
         <div className="flex h-6 rounded-full overflow-hidden">
           {categoryEntries.map(([cat, count]) => {
             const config = CATEGORY_LABELS[cat] || { label: cat, color: "#64748b" };
@@ -142,8 +139,8 @@ export function LearningPatterns() {
         </div>
       </div>
 
-      {/* Daily Activity Mini Heatmap */}
-      <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-3">
+      {/* Daily Activity */}
+      <div className="bg-white/[0.03] backdrop-blur-xl rounded-xl p-5 border border-white/[0.06] space-y-3">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-green-400" />
           <span className="text-sm font-medium">일별 캡처 추이</span>
