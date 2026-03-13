@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users, NotebookPen, Trash2, GraduationCap, BookA, Briefcase } from "lucide-react";
+import { Home, PenLine, Brain, BarChart3, Swords, User, Network, BookOpen, Users, NotebookPen, Trash2, GraduationCap, BookA, Briefcase, Heart } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "홈", icon: Home },
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/diary", label: "학습 일기", icon: NotebookPen },
   { href: "/tutor", label: "AI 튜터", icon: GraduationCap },
   { href: "/glossary", label: "용어 사전", icon: BookA },
+  { href: "/mindcare", label: "멘탈 케어", icon: Heart },
   { href: "/coach", label: "AI 코치", icon: Brain },
   { href: "/progress", label: "진도", icon: BarChart3 },
   { href: "/quest", label: "퀘스트", icon: Swords },

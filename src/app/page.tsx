@@ -13,6 +13,7 @@ import { MetricsPanel } from "@/components/dashboard/metrics-panel";
 import { MainQuestRetro } from "@/components/dashboard/main-quest-retro";
 import { BusinessInsightCard } from "@/components/dashboard/business-insight-card";
 import { TrendBriefing } from "@/components/dashboard/trend-briefing";
+import { MindcareCard } from "@/components/dashboard/mindcare-card";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +31,9 @@ export default function Dashboard() {
 
       {/* Daily Brief */}
       <DailyBrief />
+
+      {/* Mental Care */}
+      <MindcareCard />
 
       {/* Main Quest Special Retro (only on Main Quest days) */}
       <MainQuestRetro />

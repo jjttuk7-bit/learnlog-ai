@@ -80,4 +80,9 @@ export const AI_MODELS = {
   businessInsight: "gpt-4o-mini",
   businessChat: "gpt-4o",
   businessSynergy: "gpt-4o",
+
+  // Mental care — checkin/SOS is short, chat needs deep empathy
+  mindcareCheckin: "gpt-4o-mini",
+  mindcareSos: "gpt-4o-mini",
+  mindcareChat: "gpt-4o",
 } as const;
