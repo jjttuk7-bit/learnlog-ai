@@ -29,14 +29,15 @@ interface Props {
   initialMessages?: Message[];
   initialSessionId?: string;
   captures?: string[];
+  glossaryMode?: boolean;
 }
 
-export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessages, initialSessionId, captures }: Props) {
+export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessages, initialSessionId, captures, glossaryMode }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
-  const [chatMode, setChatMode] = useState<ChatMode>("normal");
+  const [chatMode, setChatMode] = useState<ChatMode>(glossaryMode ? "normal" : "normal");
   const sessionIdRef = useRef<string | null>(initialSessionId ?? null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -84,7 +85,7 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
           history: messages,
           topic,
           module,
-          mode: chatMode,
+          mode: glossaryMode ? "glossary" : chatMode,
           captures,
         }),
       });
@@ -207,52 +208,80 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
       </div>
 
       {/* Mode Selector */}
-      <div className="flex gap-1.5 py-2 flex-shrink-0">
-        {MODES.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => setChatMode(m.key)}
-            className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
-              chatMode === m.key
-                ? modeColorMap[m.color]
-                : "bg-slate-800/50 text-slate-500 border-slate-700 hover:text-slate-300"
-            }`}
-          >
-            {m.icon}
-            {m.label}
-          </button>
-        ))}
-      </div>
+      {glossaryMode ? (
+        <div className="flex items-center gap-2 py-2 flex-shrink-0">
+          <span className="text-xs px-2.5 py-1.5 rounded-lg border bg-amber-500/20 text-amber-400 border-amber-500/30">
+            📖 용어 코칭 모드
+          </span>
+          <span className="text-xs text-slate-500">개념 · 예시 · 활용법 · 연관 용어를 구조화하여 설명합니다</span>
+        </div>
+      ) : (
+        <div className="flex gap-1.5 py-2 flex-shrink-0">
+          {MODES.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setChatMode(m.key)}
+              className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${
+                chatMode === m.key
+                  ? modeColorMap[m.color]
+                  : "bg-slate-800/50 text-slate-500 border-slate-700 hover:text-slate-300"
+              }`}
+            >
+              {m.icon}
+              {m.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
             <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <span className="text-3xl">🎓</span>
+              <span className="text-3xl">{glossaryMode ? "📖" : "🎓"}</span>
             </div>
             <div className="space-y-2">
-              <p className="text-white font-medium">무엇이든 질문하세요!</p>
+              <p className="text-white font-medium">
+                {glossaryMode ? "궁금한 용어를 질문하세요!" : "무엇이든 질문하세요!"}
+              </p>
               <p className="text-sm text-slate-400 max-w-md">
-                개념, 코드, 에러, 수학 공식 등 학습 중 궁금한 것을
-                <br />쉬운 설명과 예시로 답변해드립니다
+                {glossaryMode
+                  ? "AI/ML 용어의 개념, 예시, 활용법, 연관 용어를\n체계적으로 설명해드리고 자동 저장합니다"
+                  : "개념, 코드, 에러, 수학 공식 등 학습 중 궁금한 것을\n쉬운 설명과 예시로 답변해드립니다"}
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-2 mt-2">
-              {[
-                { text: "이 개념이 뭐예요?", mode: "normal" as ChatMode },
-                { text: "에러 메시지 분석해주세요", mode: "error" as ChatMode },
-                { text: "이 코드 설명해주세요", mode: "code" as ChatMode },
-                { text: "구조를 그림으로 보여주세요", mode: "diagram" as ChatMode },
-              ].map((hint) => (
-                <button
-                  key={hint.text}
-                  onClick={() => { setChatMode(hint.mode); setInput(hint.text + " "); }}
-                  className="text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-full text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
-                >
-                  {hint.text}
-                </button>
-              ))}
+              {glossaryMode ? (
+                <>
+                  {["Gradient Descent가 뭐예요?", "Overfitting이 뭔가요?", "Transformer 설명해주세요", "Batch Normalization이란?"].map((text) => (
+                    <button
+                      key={text}
+                      onClick={() => setInput(text)}
+                      className="text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-full text-slate-400 hover:text-white hover:border-amber-500/50 transition-colors"
+                    >
+                      {text}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {[
+                    { text: "이 개념이 뭐예요?", mode: "normal" as ChatMode },
+                    { text: "에러 메시지 분석해주세요", mode: "error" as ChatMode },
+                    { text: "이 코드 설명해주세요", mode: "code" as ChatMode },
+                    { text: "구조를 그림으로 보여주세요", mode: "diagram" as ChatMode },
+                  ].map((hint) => (
+                    <button
+                      key={hint.text}
+                      onClick={() => { setChatMode(hint.mode); setInput(hint.text + " "); }}
+                      className="text-xs px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-full text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
+                    >
+                      {hint.text}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         )}
@@ -305,7 +334,7 @@ export function TutorChat({ topic, module, onBack, onSessionSaved, initialMessag
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={placeholders[chatMode]}
+          placeholder={glossaryMode ? "궁금한 용어를 입력하세요..." : placeholders[chatMode]}
           className="bg-slate-800 border-slate-700 text-slate-100 resize-none min-h-[56px] max-h-[120px] placeholder:text-slate-500"
           disabled={loading}
         />

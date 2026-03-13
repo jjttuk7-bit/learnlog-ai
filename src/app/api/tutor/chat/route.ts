@@ -84,6 +84,32 @@ const MODE_PROMPTS: Record<string, string> = {
 
 ### ✅ 이해도 체크
 - 다이어그램의 특정 부분에 대한 질문`,
+
+  glossary: `## 용어 코칭 모드
+학생이 AI/ML 용어의 개념을 질문했습니다. 아래 구조로 답변하세요:
+
+### 📖 개념 정의
+- 비전공자도 이해할 수 있는 쉬운 설명 (일상 비유 필수)
+- 영어 원어와 한글 병기
+
+### 💻 실제 예시
+- 실행 가능한 코드 예시 (Python 중심)
+- 입력/출력 결과 포함
+- 코드에 한글 주석 상세히
+
+### 🔧 활용법
+- 실무/학습에서 어떻게 사용되는지
+- 어떤 상황에서 이 개념이 필요한지
+
+### 🔗 연관 용어
+- 함께 알면 좋은 관련 용어 3-5개
+- 각 용어에 한 줄 설명 포함
+
+### ✅ 이해도 체크
+- "이 용어를 자기 말로 설명해보세요" 형태의 확인 질문
+
+[중요] 응답의 맨 마지막 줄에 아래 형식으로 메타데이터를 추가하세요 (사용자에게는 보이지 않습니다):
+<!-- GLOSSARY_META: {"term": "용어명", "related": ["연관1", "연관2", "연관3"]} -->`,
 };
 
 const SYSTEM_PROMPT = `당신은 비전공자를 위한 AI/ML 전문 튜터입니다.
@@ -151,7 +177,32 @@ export async function POST(request: NextRequest) {
       temperature: 0.7,
     });
 
-    const content = completion.choices[0].message.content ?? "답변을 생성하지 못했습니다.";
+    let content = completion.choices[0].message.content ?? "답변을 생성하지 못했습니다.";
+
+    // 용어 자동 저장 (glossary 모드일 때)
+    if (mode === "glossary") {
+      try {
+        const metaMatch = content.match(/<!-- GLOSSARY_META: ({.*?}) -->/);
+        if (metaMatch) {
+          const meta = JSON.parse(metaMatch[1]);
+          content = content.replace(/\n*<!-- GLOSSARY_META:.*?-->\n*/g, "").trim();
+
+          await supabase.from("glossary_terms").upsert(
+            {
+              user_id: user.id,
+              term: meta.term,
+              module: module || null,
+              definition: content,
+              related_terms: meta.related || [],
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,term" }
+          );
+        }
+      } catch {
+        // 저장 실패해도 응답은 정상 반환
+      }
+    }
 
     return NextResponse.json({ content });
   } catch (error) {

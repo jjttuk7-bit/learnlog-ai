@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain, Share2, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { GraduationCap, Plus, BookOpen, ArrowLeft, Brain, Share2, Loader2, BookA } from "lucide-react";
 import { toast } from "sonner";
 import { DownloadMenu } from "@/components/tutor/download-menu";
 import { getTodayCurriculum } from "@/lib/curriculum";
@@ -22,12 +23,16 @@ interface Session {
   created_at: string;
 }
 
-export default function TutorPage() {
+function TutorPageContent() {
   const today = getTodayCurriculum();
-  const [mode, setMode] = useState<"home" | "chat" | "view">("home");
+  const searchParams = useSearchParams();
+  const urlMode = searchParams.get("mode");
+  const urlTerm = searchParams.get("term");
+  const [tab, setTab] = useState<"general" | "glossary">(urlMode === "glossary" ? "glossary" : "general");
+  const [mode, setMode] = useState<"home" | "chat" | "view">(urlTerm ? "chat" : "home");
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTopic, setSelectedTopic] = useState(today?.topic ?? "");
+  const [selectedTopic, setSelectedTopic] = useState(urlTerm || today?.topic || "");
   const [selectedModule, setSelectedModule] = useState(today?.module ?? "");
   const [viewingSession, setViewingSession] = useState<Session | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,6 +40,7 @@ export default function TutorPage() {
   const [captures, setCaptures] = useState<string[]>([]);
   const [quizSession, setQuizSession] = useState<Session | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [glossaryTerm, setGlossaryTerm] = useState(urlTerm || "");
 
   async function handleShare(session: Session) {
     setSharing(true);
@@ -207,7 +213,7 @@ export default function TutorPage() {
   if (mode === "chat") {
     return (
       <TutorChat
-        topic={selectedTopic}
+        topic={tab === "glossary" ? (glossaryTerm || "용어 학습") : selectedTopic}
         module={selectedModule}
         onBack={() => { setMode("home"); setViewingSession(null); fetchSessions(); }}
         onSessionSaved={fetchSessions}
@@ -217,6 +223,7 @@ export default function TutorPage() {
         }))}
         initialSessionId={viewingSession?.id}
         captures={captures}
+        glossaryMode={tab === "glossary"}
       />
     );
   }
@@ -234,6 +241,32 @@ export default function TutorPage() {
         <p className="text-slate-400 mt-1">학습 중 궁금한 것을 질문하고, 정리된 노트로 복습하세요</p>
       </div>
 
+      {/* Tab Selector */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setTab("general")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            tab === "general"
+              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+              : "bg-slate-800 text-slate-400 border border-slate-700 hover:text-white"
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          일반 질문
+        </button>
+        <button
+          onClick={() => setTab("glossary")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            tab === "glossary"
+              ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+              : "bg-slate-800 text-slate-400 border border-slate-700 hover:text-white"
+          }`}
+        >
+          <BookA className="w-4 h-4" />
+          용어 코칭
+        </button>
+      </div>
+
       {/* Capture Context Banner */}
       {captures.length > 0 && (
         <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 flex items-center gap-3">
@@ -246,25 +279,52 @@ export default function TutorPage() {
       )}
 
       {/* New Chat Section */}
-      <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm text-slate-300 font-medium">학습 토픽 선택</label>
-          <TopicSelector
-            value={selectedTopic}
-            onChange={(topic, module) => {
-              setSelectedTopic(topic);
-              setSelectedModule(module);
-            }}
-          />
+      {tab === "general" ? (
+        <div className="bg-slate-800 rounded-xl border border-slate-700 p-5 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm text-slate-300 font-medium">학습 토픽 선택</label>
+            <TopicSelector
+              value={selectedTopic}
+              onChange={(topic, module) => {
+                setSelectedTopic(topic);
+                setSelectedModule(module);
+              }}
+            />
+          </div>
+          <button
+            onClick={startNewChat}
+            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg px-4 py-3 transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            새 질문 시작하기
+          </button>
         </div>
-        <button
-          onClick={startNewChat}
-          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg px-4 py-3 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          새 질문 시작하기
-        </button>
-      </div>
+      ) : (
+        <div className="bg-slate-800 rounded-xl border border-amber-500/20 p-5 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm text-amber-300 font-medium">궁금한 용어 입력</label>
+            <input
+              type="text"
+              value={glossaryTerm}
+              onChange={(e) => setGlossaryTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && glossaryTerm.trim() && startNewChat()}
+              placeholder="예: Gradient Descent, Overfitting, Transformer..."
+              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50"
+            />
+          </div>
+          <p className="text-xs text-slate-500">
+            용어를 질문하면 개념 · 예시 · 활용법 · 연관 용어를 체계적으로 설명하고 자동 저장합니다
+          </p>
+          <button
+            onClick={startNewChat}
+            disabled={!glossaryTerm.trim()}
+            className="w-full flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-medium rounded-lg px-4 py-3 transition-colors"
+          >
+            <BookA className="w-5 h-5" />
+            용어 코칭 시작
+          </button>
+        </div>
+      )}
 
       {/* Stats */}
       {sessions.length > 0 && (
@@ -308,5 +368,13 @@ export default function TutorPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function TutorPage() {
+  return (
+    <Suspense fallback={<div className="text-slate-400 p-6">로딩 중...</div>}>
+      <TutorPageContent />
+    </Suspense>
   );
 }
