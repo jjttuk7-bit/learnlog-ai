@@ -12,6 +12,7 @@ import { WeeklyReport } from "@/components/dashboard/weekly-report";
 import { MetricsPanel } from "@/components/dashboard/metrics-panel";
 import { MainQuestRetro } from "@/components/dashboard/main-quest-retro";
 import { BusinessInsightCard } from "@/components/dashboard/business-insight-card";
+import { TrendBriefing } from "@/components/dashboard/trend-briefing";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +49,9 @@ export default function Dashboard() {
 
       {/* Crisis Alert (only shown during high-intensity periods) */}
       <CrisisAlert />
+
+      {/* AI Trend Briefing */}
+      <TrendBriefing />
 
       {/* Business Insight (only when ideas exist) */}
       <BusinessInsightCard />
