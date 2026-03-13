@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Home, PenLine, Brain, GraduationCap,
   NotebookPen, BookA, Swords, BarChart3, Network,
-  BookOpen, Briefcase, Languages, Heart, Users, User, Trash2, ClipboardList,
+  BookOpen, Briefcase, Languages, Heart, Users, User, Trash2, ClipboardList, MessageCircleQuestion,
 } from "lucide-react";
 
 const navGroups = [
@@ -39,6 +39,7 @@ const navGroups = [
     items: [
       { href: "/business", label: "비즈니스", icon: Briefcase },
       { href: "/english", label: "English Prep", icon: Languages },
+      { href: "/question-training", label: "질문근육", icon: MessageCircleQuestion },
       { href: "/mindcare", label: "멘탈 케어", icon: Heart },
     ],
   },
