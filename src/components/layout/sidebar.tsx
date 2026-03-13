@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Home, PenLine, Brain, GraduationCap,
   NotebookPen, BookA, Swords, BarChart3, Network,
-  BookOpen, Briefcase, Languages, Heart, Users, User, Trash2,
+  BookOpen, Briefcase, Languages, Heart, Users, User, Trash2, ClipboardList,
 } from "lucide-react";
 
 const navGroups = [
@@ -20,6 +20,7 @@ const navGroups = [
   {
     label: "학습 기록",
     items: [
+      { href: "/planner", label: "학습 플래너", icon: ClipboardList },
       { href: "/diary", label: "학습 일기", icon: NotebookPen },
       { href: "/glossary", label: "용어 사전", icon: BookA },
       { href: "/quest", label: "퀘스트", icon: Swords },
