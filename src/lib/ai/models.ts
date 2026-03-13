@@ -72,4 +72,8 @@ export const AI_MODELS = {
   // AI Tutor — needs deep understanding for comprehensive explanations
   tutorChat: "gpt-4o",
   tutorSummarize: "gpt-4o-mini",
+
+  // Business model — insight is concise, chat/canvas needs depth
+  businessInsight: "gpt-4o-mini",
+  businessChat: "gpt-4o",
 } as const;
