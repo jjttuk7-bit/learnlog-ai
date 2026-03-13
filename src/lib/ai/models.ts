@@ -74,6 +74,9 @@ export const AI_MODELS = {
   tutorSummarize: "gpt-4o-mini",
 
   // Business model — insight is concise, chat/canvas needs depth
+  // Diary — deep analysis of daily learning
+  diaryComment: "gpt-4o",
+
   businessInsight: "gpt-4o-mini",
   businessChat: "gpt-4o",
   businessSynergy: "gpt-4o",

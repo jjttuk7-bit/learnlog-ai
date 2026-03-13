@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import type { DiaryEntry } from "@/app/diary/page";
 
@@ -74,11 +75,11 @@ function DiaryCard({ entry, onRemove }: { entry: DiaryEntry; onRemove: (id: stri
         <div className="px-5 py-4 bg-amber-500/5 border-t border-amber-500/20">
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span className="text-sm font-medium text-amber-400">AI 멘토 코멘트</span>
+            <span className="text-sm font-medium text-amber-400">AI 멘토 분석</span>
           </div>
-          <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
-            {entry.ai_comment}
-          </p>
+          <div className="prose prose-invert prose-sm max-w-none [&_h3]:text-amber-300 [&_h3]:text-sm [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_p]:my-1.5 [&_strong]:text-white [&_pre]:bg-slate-900 [&_pre]:border [&_pre]:border-slate-600 [&_pre]:rounded-lg [&_code]:text-emerald-400">
+            <ReactMarkdown>{entry.ai_comment}</ReactMarkdown>
+          </div>
         </div>
       )}
     </div>
