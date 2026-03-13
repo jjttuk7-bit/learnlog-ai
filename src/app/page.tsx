@@ -10,6 +10,7 @@ import { GrowthTimeline } from "@/components/confidence/growth-timeline";
 import { MiniGraph } from "@/components/dashboard/mini-graph";
 import { WeeklyReport } from "@/components/dashboard/weekly-report";
 import { MetricsPanel } from "@/components/dashboard/metrics-panel";
+import { MainQuestRetro } from "@/components/dashboard/main-quest-retro";
 import { getTodayCurriculum } from "@/lib/curriculum";
 import { FolderOpen } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +29,9 @@ export default function Dashboard() {
       {/* Daily Brief */}
       <DailyBrief />
 
+      {/* Main Quest Special Retro (only on Main Quest days) */}
+      <MainQuestRetro />
+
       {/* Today Summary + Quick Actions */}
       <TodaySummary />
       <QuickActions />
@@ -38,7 +42,7 @@ export default function Dashboard() {
       {/* Streak + Completion */}
       <div className="grid gap-4 sm:grid-cols-2">
         <StreakCounter />
-        <CompletionGauge percentage={85} />
+        <CompletionGauge />
       </div>
 
       {/* Crisis Alert (only shown during high-intensity periods) */}

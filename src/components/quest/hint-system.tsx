@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lightbulb, Lock, Unlock, Loader2 } from "lucide-react";
@@ -20,6 +20,18 @@ export function HintSystem({ quest }: Props) {
   const [hints, setHints] = useState<Hint[]>([]);
   const [currentLevel, setCurrentLevel] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [totalHintsUsed, setTotalHintsUsed] = useState(0);
+
+  useEffect(() => {
+    async function loadHintHistory() {
+      try {
+        const res = await fetch(`/api/quest/hint-stats?questId=${quest.id}`);
+        const data = await res.json();
+        setTotalHintsUsed(data.hintsUsed || 0);
+      } catch { /* ignore */ }
+    }
+    loadHintHistory();
+  }, [quest.id]);
 
   async function requestHint() {
     if (!stuckPoint.trim() && currentLevel === 0) return;
@@ -33,6 +45,7 @@ export function HintSystem({ quest }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           questTitle: quest.title,
+          questId: quest.id,
           stuckPoint: stuckPoint || "일반적인 도움이 필요합니다",
           hintLevel: nextLevel,
           module: quest.module,
@@ -115,7 +128,8 @@ export function HintSystem({ quest }: Props) {
 
       {/* Hint usage stats */}
       <div className="text-xs text-slate-500">
-        힌트 사용: {currentLevel}/3 단계
+        이번 세션: {currentLevel}/3 단계
+        {totalHintsUsed > 0 && <span> · 누적 힌트: {totalHintsUsed}회</span>}
       </div>
     </div>
   );

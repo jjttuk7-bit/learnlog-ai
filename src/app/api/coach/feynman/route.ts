@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import OpenAI from "openai";
 import { FEYNMAN_SYSTEM_PROMPT } from "@/lib/prompts/deep-check";
 import { AI_MODELS, getOpenAI } from "@/lib/ai/models";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   const openai = getOpenAI();
@@ -59,5 +60,28 @@ export async function POST(request: NextRequest) {
   });
 
   const text = completion.choices[0].message.content ?? "";
-  return Response.json({ content: text });
+
+  // 점수 파싱 및 DB 저장
+  const scoreMatch = text.match(/(\d)\/5|점수[:\s]*(\d)/);
+  const score = scoreMatch ? parseInt(scoreMatch[1] || scoreMatch[2]) : null;
+
+  if (score && score >= 1 && score <= 5 && concept) {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("feynman_scores").insert({
+          user_id: user.id,
+          concept,
+          module: module || "",
+          score,
+          feedback_summary: text.slice(0, 200),
+        });
+      }
+    } catch {
+      // 점수 저장 실패해도 피드백 응답은 정상 반환
+    }
+  }
+
+  return Response.json({ content: text, score });
 }

@@ -8,10 +8,11 @@ import { Loader2, RefreshCw } from "lucide-react";
 interface Props {
   module: string;
   topic: string;
+  initialConcept?: string;
 }
 
-export function FeynmanSession({ module, topic }: Props) {
-  const [concept, setConcept] = useState<string | null>(null);
+export function FeynmanSession({ module, topic, initialConcept }: Props) {
+  const [concept, setConcept] = useState<string | null>(initialConcept ?? null);
   const [explanation, setExplanation] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [round, setRound] = useState(0);

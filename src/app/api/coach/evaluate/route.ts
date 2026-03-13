@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { AI_MODELS, getOpenAI } from "@/lib/ai/models";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   const openai = getOpenAI();
@@ -69,6 +70,47 @@ follow_up은 반드시 포함해야 합니다. 대화가 자연스럽게 이어�
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
+      // 약점 개념 추적: 이해도 3 이하면 저장, 4 이상이면 해결 처리
+      try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && topic) {
+          if (parsed.understanding_level <= 3) {
+            const { data: existing } = await supabase
+              .from("weakness_concepts")
+              .select("id, fail_count")
+              .eq("user_id", user.id)
+              .eq("concept", topic)
+              .eq("resolved", false)
+              .limit(1)
+              .single();
+
+            if (existing) {
+              await supabase
+                .from("weakness_concepts")
+                .update({ fail_count: existing.fail_count + 1, last_asked: new Date().toISOString() })
+                .eq("id", existing.id);
+            } else {
+              await supabase.from("weakness_concepts").insert({
+                user_id: user.id,
+                concept: topic,
+                module: module || "",
+                topic: question || "",
+              });
+            }
+          } else if (parsed.understanding_level >= 4) {
+            await supabase
+              .from("weakness_concepts")
+              .update({ resolved: true })
+              .eq("user_id", user.id)
+              .eq("concept", topic)
+              .eq("resolved", false);
+          }
+        }
+      } catch {
+        // 약점 추적 실패해도 평가 응답은 정상 반환
+      }
+
       return new Response(
         JSON.stringify({
           content:

@@ -326,6 +326,50 @@ export default function MindmapPage() {
               </div>
             )}
           </div>
+
+          {/* Comparison Summary */}
+          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20 p-4 space-y-3">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <GitBranch className="w-4 h-4 text-blue-400" />
+              내 맵 vs AI 맵 비교
+            </h3>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-blue-400">{nodes.length}</div>
+                <div className="text-xs text-slate-400">내 노드</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-purple-400">{aiNodes.length}</div>
+                <div className="text-xs text-slate-400">AI 노드</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-emerald-400">
+                  {aiNodes.length > 0 ? Math.round((nodes.length / aiNodes.length) * 100) : 0}%
+                </div>
+                <div className="text-xs text-slate-400">커버리지</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-slate-400">내 연결: </span>
+                <span className="text-blue-300 font-medium">{edges.length}개</span>
+              </div>
+              <div>
+                <span className="text-slate-400">AI 연결: </span>
+                <span className="text-purple-300 font-medium">{aiEdges.length}개</span>
+              </div>
+            </div>
+            {aiNodes.length > nodes.length && (
+              <p className="text-xs text-slate-400">
+                AI가 {aiNodes.length - nodes.length}개 노드를 더 제안했습니다. AI 제안 맵을 참고하여 누락된 개념을 보완해보세요.
+              </p>
+            )}
+            {nodes.length >= aiNodes.length && aiNodes.length > 0 && (
+              <p className="text-xs text-slate-400">
+                노드 수가 충분합니다! 연결 관계와 구조가 적절한지 AI 분석 결과를 확인해보세요.
+              </p>
+            )}
+          </div>
         </div>
       ) : (
         <div className="h-[500px]">

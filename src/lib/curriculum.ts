@@ -94,3 +94,31 @@ export function getMainQuests(): CurriculumDay[] {
 export function getAllQuests(): CurriculumDay[] {
   return CURRICULUM.filter((d) => d.questId != null);
 }
+
+/** Get upcoming high-intensity period within N days */
+export function getUpcomingHighIntensity(
+  daysAhead: number = 14,
+  today?: string
+): { module: Module; daysUntil: number } | null {
+  const dateStr = today ?? new Date().toISOString().split("T")[0];
+  const todayDate = new Date(dateStr + "T00:00:00");
+  const futureDate = new Date(todayDate.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+  const futureDateStr = futureDate.toISOString().split("T")[0];
+
+  const highIntensityModules = ["LLM 활용", "DLthon 2", "모델 배포 기초", "MLOps", "파이널 프로젝트"];
+
+  // 현재 이미 고난이도 구간이면 null
+  const current = getCurrentModule(dateStr);
+  if (current && highIntensityModules.includes(current.name)) return null;
+
+  const upcoming = MODULES.find(
+    (m) => highIntensityModules.includes(m.name) && m.startDate > dateStr && m.startDate <= futureDateStr
+  );
+
+  if (!upcoming) return null;
+
+  const diffMs = new Date(upcoming.startDate + "T00:00:00").getTime() - todayDate.getTime();
+  const daysUntil = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  return { module: upcoming, daysUntil };
+}

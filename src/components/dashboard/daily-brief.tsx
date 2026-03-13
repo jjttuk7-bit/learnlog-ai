@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getTodayCurriculum, getCurrentModule, getDaysUntilNextQuest, isHighIntensityPeriod } from "@/lib/curriculum";
+import { getTodayCurriculum, getCurrentModule, getDaysUntilNextQuest, isHighIntensityPeriod, getUpcomingHighIntensity } from "@/lib/curriculum";
 import { getQuestById } from "@/data/quests";
 import { Sun, Target, AlertTriangle, Swords } from "lucide-react";
 
@@ -10,6 +10,7 @@ export function DailyBrief() {
   const currentModule = getCurrentModule();
   const nextQuest = getDaysUntilNextQuest();
   const isHighIntensity = isHighIntensityPeriod();
+  const upcomingHard = getUpcomingHighIntensity();
   const [goals, setGoals] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -89,6 +90,21 @@ export function DailyBrief() {
           <div className="text-sm">
             <span className="text-orange-400 font-medium">{quest.id}</span>
             <span className="text-slate-400"> — {quest.title}</span>
+          </div>
+        </div>
+      )}
+
+      {/* 2주 전 사전 경보 */}
+      {upcomingHard && (
+        <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-sm text-amber-300 font-medium">
+              {upcomingHard.daysUntil}일 후 고난이도 구간 진입 예정
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {upcomingHard.module.name} ({upcomingHard.module.description}). 이 구간은 모두가 어려워합니다. 지금부터 기초를 탄탄히 다져두세요!
+            </p>
           </div>
         </div>
       )}

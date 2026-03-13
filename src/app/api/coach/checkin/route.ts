@@ -1,9 +1,36 @@
 import { NextRequest } from "next/server";
 import { AI_MODELS, getOpenAI } from "@/lib/ai/models";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   const openai = getOpenAI();
   const { captures, module, topic } = await request.json();
+
+  // 미해결 약점 개념 조회
+  let weaknessList = "";
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: weaknesses } = await supabase
+        .from("weakness_concepts")
+        .select("concept, module, fail_count")
+        .eq("user_id", user.id)
+        .eq("resolved", false)
+        .order("fail_count", { ascending: false })
+        .limit(5);
+
+      if (weaknesses && weaknesses.length > 0) {
+        weaknessList = "\n\n## 이전 학습에서 약했던 개념 (우선 재질문 대상)\n" +
+          weaknesses.map((w: { concept: string; module: string; fail_count: number }) =>
+            `- ${w.concept} (${w.module}, ${w.fail_count}회 어려움)`
+          ).join("\n") +
+          "\n\n위 약점 개념 중 오늘 주제와 관련 있는 것이 있다면, 반드시 질문에 포함하세요.";
+      }
+    }
+  } catch {
+    // 약점 조회 실패해도 체크인은 정상 진행
+  }
 
   const systemPrompt = `당신은 LearnLog AI의 메타인지 학습 코치입니다.
 
@@ -15,6 +42,7 @@ export async function POST(request: NextRequest) {
 
 현재 모듈: ${module || "미정"}
 오늘 주제: ${topic || "미정"}
+${weaknessList}
 
 항상 한국어로 답변하세요.`;
 

@@ -81,7 +81,7 @@ export function DownloadMenu({ session, size = "sm" }: Props) {
     try {
       const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import("docx");
 
-      const children: Paragraph[] = [];
+      const children: InstanceType<typeof Paragraph>[] = [];
 
       // Title
       children.push(new Paragraph({

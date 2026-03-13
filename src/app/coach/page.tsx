@@ -5,6 +5,7 @@ import { getTodayCurriculum } from "@/lib/curriculum";
 import { CheckinSession } from "@/components/coach/checkin-session";
 import { MessageSquare, BookOpen, FileText, GitBranch, Sparkles, History, ArrowLeft } from "lucide-react";
 import { ChatMessage } from "@/components/coach/chat-message";
+import { FeynmanGrowthChart } from "@/components/coach/feynman-growth-chart";
 
 const DAY_ROUTINES: Record<number, { label: string; mode: string; color: string }> = {
   1: { label: "월", mode: "feynman", color: "green" },
@@ -244,6 +245,9 @@ export default function CoachPage() {
           </div>
         </a>
       </div>
+
+      {/* 파인만 성장 곡선 */}
+      <FeynmanGrowthChart />
 
       {/* 세션 기록 */}
       {sessions.length > 0 && (
