@@ -85,4 +85,8 @@ export const AI_MODELS = {
   mindcareCheckin: "gpt-4o-mini",
   mindcareSos: "gpt-4o-mini",
   mindcareChat: "gpt-4o",
+
+  // English prep — needs natural English + correction quality
+  englishChat: "gpt-4o",
+  englishExplain: "gpt-4o",
 } as const;
